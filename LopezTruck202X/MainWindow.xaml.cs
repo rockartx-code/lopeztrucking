@@ -73,6 +73,12 @@ public sealed partial class MainWindow : Window
         await CatalogDialog.ShowAsync();
     }
 
+    private async void OnOpenSearch(object sender, RoutedEventArgs e)
+    {
+        SearchDialog.XamlRoot = Root.XamlRoot;
+        await SearchDialog.ShowAsync();
+    }
+
     private async void OnAddOrigin(object sender, RoutedEventArgs e)
     {
         var name = ViewModel.NewOriginName?.Trim();
@@ -202,6 +208,33 @@ public sealed partial class MainWindow : Window
     private async void OnLinePriceSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         await UpdateLinePriceAsync();
+    }
+
+    private async void OnSearchInvoices(object sender, RoutedEventArgs e)
+    {
+        var invoices = await _repository.GetInvoicesAsync(
+            ViewModel.SearchStartDate,
+            ViewModel.SearchEndDate,
+            ViewModel.SearchCustomerName);
+        ViewModel.SetSearchResults(invoices);
+    }
+
+    private async void OnLoadSelectedInvoice(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedInvoiceSummary is null)
+        {
+            return;
+        }
+
+        var invoice = await _repository.GetInvoiceAsync(ViewModel.SelectedInvoiceSummary.Id);
+        if (invoice is null)
+        {
+            return;
+        }
+
+        ViewModel.LoadInvoice(invoice);
+        ViewModel.SelectedInvoiceSummary = null;
+        SearchDialog.Hide();
     }
 
     private async Task UpdateLinePriceAsync()
