@@ -393,7 +393,26 @@ public sealed class AccessImportService
             return 0d;
         }
 
-        return Convert.ToDouble(reader.GetValue(index), CultureInfo.InvariantCulture);
+        var value = reader.GetValue(index);
+        if (value is string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return 0d;
+            }
+
+            if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed))
+            {
+                return parsed;
+            }
+
+            if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return Convert.ToDouble(value, CultureInfo.InvariantCulture);
     }
 
     private static int? ReadInt(OleDbDataReader reader, int index)
