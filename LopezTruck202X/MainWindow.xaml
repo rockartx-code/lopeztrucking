@@ -3,8 +3,9 @@
     x:Class="LopezTruck202X.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:LopezTruck202X"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:LopezTruck202X"
+    xmlns:models="using:LopezTruck202X.Models"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="LopezTruck202X">
@@ -13,7 +14,173 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="24">
+            <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
 
-    </Grid>
+            <Grid ColumnSpacing="16" RowSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6">
+                    <TextBlock Text="Invoice No." />
+                    <NumberBox Value="{x:Bind ViewModel.InvoiceNumber, Mode=TwoWay}" Minimum="1" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Fecha" />
+                    <DatePicker Date="{x:Bind ViewModel.InvoiceDate, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="2" Spacing="6">
+                    <TextBlock Text="Check" />
+                    <TextBox Text="{x:Bind ViewModel.CheckNumber, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+                    <TextBlock Text="Cliente" />
+                    <TextBox Text="{x:Bind ViewModel.CustomerName, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Teléfono" />
+                    <TextBox Text="{x:Bind ViewModel.CustomerPhone, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnSpacing="16" RowSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="6">
+                    <TextBlock Text="Dirección" />
+                    <TextBox Text="{x:Bind ViewModel.CustomerAddress, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Ciudad" />
+                    <TextBox Text="{x:Bind ViewModel.CustomerCity, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Spacing="6">
+                    <TextBlock Text="Estado" />
+                    <TextBox Text="{x:Bind ViewModel.CustomerState, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="Detalle de viajes" FontSize="18" FontWeight="SemiBold" />
+
+                <Grid ColumnSpacing="12" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Fecha" />
+                        <DatePicker Date="{x:Bind ViewModel.NewLineDate, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Compañía" />
+                        <TextBox Text="{x:Bind ViewModel.NewLineCompany, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Origen" />
+                        <TextBox Text="{x:Bind ViewModel.NewLineFrom, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="3" Spacing="4">
+                        <TextBlock Text="Destino" />
+                        <TextBox Text="{x:Bind ViewModel.NewLineTo, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Dispatch" />
+                        <TextBox Text="{x:Bind ViewModel.NewLineDispatch, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Empties" />
+                        <TextBox Text="{x:Bind ViewModel.NewLineEmpties, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Spacing="4">
+                        <TextBlock Text="F.B." />
+                        <TextBox Text="{x:Bind ViewModel.NewLineFb, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="3" Spacing="4">
+                        <TextBlock Text="Monto" />
+                        <NumberBox Value="{x:Bind ViewModel.NewLineAmount, Mode=TwoWay}" />
+                    </StackPanel>
+                </Grid>
+
+                <Button Content="Agregar línea" HorizontalAlignment="Left" Click="OnAddLine" />
+
+                <ListView ItemsSource="{x:Bind ViewModel.Lines, Mode=OneWay}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:InvoiceLine">
+                            <Grid ColumnSpacing="8" Padding="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{x:Bind Date, Mode=OneWay, StringFormat='{}{0:MM/dd/yyyy}'}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind Company}" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind From}" />
+                                <TextBlock Grid.Column="3" Text="{x:Bind To}" />
+                                <TextBlock Grid.Column="4" Text="{x:Bind Dispatch}" />
+                                <TextBlock Grid.Column="5" Text="{x:Bind Empties}" />
+                                <TextBlock Grid.Column="6" Text="{x:Bind Fb}" />
+                                <TextBlock Grid.Column="7" Text="{x:Bind Amount, StringFormat='{}{0:C}'}" HorizontalAlignment="Right" />
+                                <Button Grid.Column="8" Content="Quitar" Tag="{x:Bind}" Click="OnRemoveLine" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="Advance" />
+                    <NumberBox Width="140" Value="{x:Bind ViewModel.Advance, Mode=TwoWay}" />
+                    <TextBlock Text="Subtotal" />
+                    <TextBlock Text="{x:Bind ViewModel.Subtotal, Mode=OneWay, StringFormat='{}{0:C}'}" />
+                    <TextBlock Text="Total" />
+                    <TextBlock Text="{x:Bind ViewModel.Total, Mode=OneWay, StringFormat='{}{0:C}'}" FontWeight="SemiBold" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <Button Content="Guardar" Click="OnSave" />
+                    <Button Content="Generar PDF" Click="OnGeneratePdf" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </Window>
