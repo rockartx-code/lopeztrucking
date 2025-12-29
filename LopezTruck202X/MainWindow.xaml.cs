@@ -5,6 +5,7 @@ using LopezTruck202X.Services;
 using LopezTruck202X.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Storage;
 
 namespace LopezTruck202X;
 
@@ -22,7 +23,10 @@ public sealed partial class MainWindow : Window
         var database = new SqliteDatabase(databasePath);
         _repository = new SqliteInvoiceRepository(database);
 
-        Loaded += OnLoaded;
+        if (Content is FrameworkElement root)
+        {
+            root.Loaded += OnLoaded;
+        }
     }
 
     public MainViewModel ViewModel { get; }

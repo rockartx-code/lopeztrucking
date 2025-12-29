@@ -82,14 +82,15 @@ public sealed class InvoiceLine : INotifyPropertyChanged
 
     public string AmountDisplay => Amount.ToString("C", CultureInfo.CurrentCulture);
 
-    private void SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
         if (Equals(field, value))
         {
-            return;
+            return false;
         }
 
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        return true;
     }
 }

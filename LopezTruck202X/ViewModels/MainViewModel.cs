@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using LopezTruck202X.Models;
 
@@ -230,7 +231,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         NewLineDispatch = string.Empty;
         NewLineEmpties = string.Empty;
         NewLineFb = string.Empty;
-        NewLineAmount = 0m;
+        NewLineAmount = 0d;
     }
 
     private void OnLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
