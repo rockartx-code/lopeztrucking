@@ -35,7 +35,7 @@ public sealed class SqliteInvoiceRepository
 
             CREATE TABLE IF NOT EXISTS Invoices (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Number INTEGER NOT NULL UNIQUE,
+                Number INTEGER NOT NULL,
                 Date TEXT NOT NULL,
                 CheckNumber TEXT,
                 CustomerId INTEGER NOT NULL,
@@ -88,6 +88,7 @@ public sealed class SqliteInvoiceRepository
         await command.ExecuteNonQueryAsync();
 
         await EnsureCustomerIsActiveColumnAsync(connection);
+        await EnsureInvoiceNumberIsNotUniqueAsync(connection);
     }
 
     public async Task<int> GetNextInvoiceNumberAsync()
@@ -364,6 +365,32 @@ public sealed class SqliteInvoiceRepository
 
     private static async Task<int> UpsertInvoiceAsync(SqliteConnection connection, Invoice invoice, int customerId)
     {
+        if (invoice.Id > 0)
+        {
+            var updateCommand = connection.CreateCommand();
+            updateCommand.CommandText = """
+                UPDATE Invoices
+                SET Number = $number,
+                    Date = $date,
+                    CheckNumber = $check,
+                    CustomerId = $customerId,
+                    Subtotal = $subtotal,
+                    Advance = $advance,
+                    Total = $total
+                WHERE Id = $id;
+                """;
+            updateCommand.Parameters.AddWithValue("$number", invoice.Number);
+            updateCommand.Parameters.AddWithValue("$date", invoice.Date.ToString("O"));
+            updateCommand.Parameters.AddWithValue("$check", invoice.CheckNumber);
+            updateCommand.Parameters.AddWithValue("$customerId", customerId);
+            updateCommand.Parameters.AddWithValue("$subtotal", invoice.Subtotal);
+            updateCommand.Parameters.AddWithValue("$advance", invoice.Advance);
+            updateCommand.Parameters.AddWithValue("$total", invoice.Total);
+            updateCommand.Parameters.AddWithValue("$id", invoice.Id);
+            await updateCommand.ExecuteNonQueryAsync();
+            return invoice.Id;
+        }
+
         var selectCommand = connection.CreateCommand();
         selectCommand.CommandText = "SELECT Id FROM Invoices WHERE Number = $number";
         selectCommand.Parameters.AddWithValue("$number", invoice.Number);
@@ -408,6 +435,53 @@ public sealed class SqliteInvoiceRepository
         insertCommand.Parameters.AddWithValue("$total", invoice.Total);
         var newId = await insertCommand.ExecuteScalarAsync();
         return Convert.ToInt32(newId);
+    }
+
+    private static async Task EnsureInvoiceNumberIsNotUniqueAsync(SqliteConnection connection)
+    {
+        var checkCommand = connection.CreateCommand();
+        checkCommand.CommandText = "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'Invoices';";
+        var tableSql = await checkCommand.ExecuteScalarAsync() as string;
+
+        if (string.IsNullOrWhiteSpace(tableSql) || !tableSql.Contains("Number INTEGER NOT NULL UNIQUE", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var pragmaCommand = connection.CreateCommand();
+        pragmaCommand.CommandText = "PRAGMA foreign_keys = OFF;";
+        await pragmaCommand.ExecuteNonQueryAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        var rebuildCommand = connection.CreateCommand();
+        rebuildCommand.CommandText = """
+            CREATE TABLE Invoices_new (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Number INTEGER NOT NULL,
+                Date TEXT NOT NULL,
+                CheckNumber TEXT,
+                CustomerId INTEGER NOT NULL,
+                Subtotal REAL NOT NULL,
+                Advance REAL NOT NULL,
+                Total REAL NOT NULL,
+                FOREIGN KEY(CustomerId) REFERENCES Customers(Id)
+            );
+
+            INSERT INTO Invoices_new (Id, Number, Date, CheckNumber, CustomerId, Subtotal, Advance, Total)
+            SELECT Id, Number, Date, CheckNumber, CustomerId, Subtotal, Advance, Total
+            FROM Invoices;
+
+            DROP TABLE Invoices;
+            ALTER TABLE Invoices_new RENAME TO Invoices;
+            """;
+        await rebuildCommand.ExecuteNonQueryAsync();
+
+        await transaction.CommitAsync();
+
+        var enableForeignKeysCommand = connection.CreateCommand();
+        enableForeignKeysCommand.CommandText = "PRAGMA foreign_keys = ON;";
+        await enableForeignKeysCommand.ExecuteNonQueryAsync();
     }
 
     public async Task<IReadOnlyList<Origin>> GetOriginsAsync()
