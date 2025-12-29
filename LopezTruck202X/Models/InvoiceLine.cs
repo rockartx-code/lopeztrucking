@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace LopezTruck202X.Models;
@@ -20,7 +21,13 @@ public sealed class InvoiceLine : INotifyPropertyChanged
     public DateTimeOffset Date
     {
         get => _date;
-        set => SetField(ref _date, value);
+        set
+        {
+            if (SetField(ref _date, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DateDisplay)));
+            }
+        }
     }
 
     public string Company
@@ -62,8 +69,18 @@ public sealed class InvoiceLine : INotifyPropertyChanged
     public decimal Amount
     {
         get => _amount;
-        set => SetField(ref _amount, value);
+        set
+        {
+            if (SetField(ref _amount, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AmountDisplay)));
+            }
+        }
     }
+
+    public string DateDisplay => Date.ToString("MM/dd/yyyy", CultureInfo.CurrentCulture);
+
+    public string AmountDisplay => Amount.ToString("C", CultureInfo.CurrentCulture);
 
     private void SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
