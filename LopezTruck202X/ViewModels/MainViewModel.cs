@@ -35,6 +35,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _newOriginName = string.Empty;
     private string _newDestinationName = string.Empty;
     private string _newCompanyName = string.Empty;
+    private int? _newPriceCompanyId;
+    private int? _newPriceOriginId;
+    private int? _newPriceDestinationId;
+    private double _newPriceAmount;
 
     public MainViewModel()
     {
@@ -47,6 +51,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<Origin> Origins { get; } = new();
     public ObservableCollection<Destination> Destinations { get; } = new();
     public ObservableCollection<Company> Companies { get; } = new();
+    public ObservableCollection<Price> Prices { get; } = new();
 
     public double InvoiceNumber
     {
@@ -198,6 +203,30 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newCompanyName, value);
     }
 
+    public int? NewPriceCompanyId
+    {
+        get => _newPriceCompanyId;
+        set => SetField(ref _newPriceCompanyId, value);
+    }
+
+    public int? NewPriceOriginId
+    {
+        get => _newPriceOriginId;
+        set => SetField(ref _newPriceOriginId, value);
+    }
+
+    public int? NewPriceDestinationId
+    {
+        get => _newPriceDestinationId;
+        set => SetField(ref _newPriceDestinationId, value);
+    }
+
+    public double NewPriceAmount
+    {
+        get => _newPriceAmount;
+        set => SetField(ref _newPriceAmount, value);
+    }
+
     public string SubtotalFormatted => Subtotal.ToString("C", CultureInfo.CurrentCulture);
 
     public string TotalFormatted => Total.ToString("C", CultureInfo.CurrentCulture);
@@ -250,6 +279,54 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             Companies.Add(company);
         }
+    }
+
+    public void SetPrices(IEnumerable<Price> prices)
+    {
+        Prices.Clear();
+        foreach (var price in prices)
+        {
+            Prices.Add(price);
+        }
+    }
+
+    public bool TryGetSelectedRouteIds(out int companyId, out int originId, out int destinationId)
+    {
+        companyId = 0;
+        originId = 0;
+        destinationId = 0;
+
+        if (string.IsNullOrWhiteSpace(SelectedCompanyName)
+            || string.IsNullOrWhiteSpace(NewLineFrom)
+            || string.IsNullOrWhiteSpace(NewLineTo))
+        {
+            return false;
+        }
+
+        var company = Companies.FirstOrDefault(item =>
+            string.Equals(item.Name, SelectedCompanyName, StringComparison.OrdinalIgnoreCase));
+        var origin = Origins.FirstOrDefault(item =>
+            string.Equals(item.Name, NewLineFrom, StringComparison.OrdinalIgnoreCase));
+        var destination = Destinations.FirstOrDefault(item =>
+            string.Equals(item.Name, NewLineTo, StringComparison.OrdinalIgnoreCase));
+
+        if (company is null || origin is null || destination is null)
+        {
+            return false;
+        }
+
+        companyId = company.Id;
+        originId = origin.Id;
+        destinationId = destination.Id;
+        return true;
+    }
+
+    public void ResetNewPrice()
+    {
+        NewPriceCompanyId = null;
+        NewPriceOriginId = null;
+        NewPriceDestinationId = null;
+        NewPriceAmount = 0d;
     }
 
     public Invoice ToInvoice()

@@ -106,21 +106,24 @@
                         <ComboBox ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}"
                                   DisplayMemberPath="Name"
                                   SelectedValuePath="Name"
-                                  SelectedValue="{x:Bind ViewModel.SelectedCompanyName, Mode=TwoWay}" />
+                                  SelectedValue="{x:Bind ViewModel.SelectedCompanyName, Mode=TwoWay}"
+                                  SelectionChanged="OnLinePriceSelectionChanged" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
                         <TextBlock Text="Origen" />
                         <ComboBox ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}"
                                   DisplayMemberPath="Name"
                                   SelectedValuePath="Name"
-                                  SelectedValue="{x:Bind ViewModel.NewLineFrom, Mode=TwoWay}" />
+                                  SelectedValue="{x:Bind ViewModel.NewLineFrom, Mode=TwoWay}"
+                                  SelectionChanged="OnLinePriceSelectionChanged" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="3" Spacing="4">
                         <TextBlock Text="Destino" />
                         <ComboBox ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}"
                                   DisplayMemberPath="Name"
                                   SelectedValuePath="Name"
-                                  SelectedValue="{x:Bind ViewModel.NewLineTo, Mode=TwoWay}" />
+                                  SelectedValue="{x:Bind ViewModel.NewLineTo, Mode=TwoWay}"
+                                  SelectionChanged="OnLinePriceSelectionChanged" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
@@ -268,10 +271,66 @@
                                     <Button Grid.Column="2" Content="Eliminar" Tag="{x:Bind}" Click="OnDeleteCompany" />
                                 </Grid>
                             </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
+                    </ListView.ItemTemplate>
+                </ListView>
             </StackPanel>
-        </ScrollViewer>
-    </ContentDialog>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="Precios" FontSize="16" FontWeight="SemiBold" />
+                <Grid ColumnSpacing="8" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0"
+                              PlaceholderText="Compañía"
+                              ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              SelectedValuePath="Id"
+                              SelectedValue="{x:Bind ViewModel.NewPriceCompanyId, Mode=TwoWay}" />
+                    <ComboBox Grid.Column="1"
+                              PlaceholderText="Origen"
+                              ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              SelectedValuePath="Id"
+                              SelectedValue="{x:Bind ViewModel.NewPriceOriginId, Mode=TwoWay}" />
+                    <ComboBox Grid.Column="2"
+                              PlaceholderText="Destino"
+                              ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              SelectedValuePath="Id"
+                              SelectedValue="{x:Bind ViewModel.NewPriceDestinationId, Mode=TwoWay}" />
+                    <NumberBox Grid.Column="3" Value="{x:Bind ViewModel.NewPriceAmount, Mode=TwoWay}" />
+                    <Button Grid.Column="4" Content="Guardar" Click="OnAddPrice" />
+                </Grid>
+
+                <ListView ItemsSource="{x:Bind ViewModel.Prices, Mode=OneWay}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Price">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{x:Bind CompanyName}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind OriginName}" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind DestinationName}" />
+                                <NumberBox Grid.Column="3" Value="{x:Bind Amount, Mode=TwoWay}" />
+                                <Button Grid.Column="4" Content="Actualizar" Tag="{x:Bind}" Click="OnUpdatePrice" />
+                                <Button Grid.Column="5" Content="Eliminar" Tag="{x:Bind}" Click="OnDeletePrice" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>
 </Window>
