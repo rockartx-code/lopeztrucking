@@ -22,6 +22,7 @@
                 <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
                 <Button Content="Catálogos" Click="OnOpenCatalogs" />
                 <Button Content="Buscar invoice" Click="OnOpenSearch" />
+                <Button Content="Importar Access" Click="OnImportAccess" />
             </StackPanel>
 
             <Grid ColumnSpacing="16" RowSpacing="12">
