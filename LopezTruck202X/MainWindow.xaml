@@ -425,7 +425,7 @@
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Number}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind Date, StringFormat='{}{0:MM/dd/yyyy}'}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind DateDisplay}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Check" />
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind CheckNumber}" />
@@ -489,9 +489,9 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{x:Bind Advance, StringFormat='Advance: {0:C}'}" />
-                    <TextBlock Grid.Column="1" Text="{x:Bind Subtotal, StringFormat='Subtotal: {0:C}'}" />
-                    <TextBlock Grid.Column="2" Text="{x:Bind Total, StringFormat='Total: {0:C}'}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="0" Text="{x:Bind AdvanceDisplay}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind SubtotalDisplay}" />
+                    <TextBlock Grid.Column="2" Text="{x:Bind TotalDisplay}" FontWeight="SemiBold" />
                 </Grid>
             </StackPanel>
             </ScrollViewer>
