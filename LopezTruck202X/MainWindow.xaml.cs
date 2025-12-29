@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
     {
         var invoice = ViewModel.ToInvoice();
         await _repository.SaveInvoiceAsync(invoice);
+        await LoadCustomersAsync();
     }
 
     private async void OnGeneratePdf(object sender, RoutedEventArgs e)
@@ -195,6 +196,7 @@ public sealed partial class MainWindow : Window
 
     private async Task LoadCatalogsAsync()
     {
+        await LoadCustomersAsync();
         var origins = await _repository.GetOriginsAsync();
         var destinations = await _repository.GetDestinationsAsync();
         var companies = await _repository.GetCompaniesAsync();
@@ -203,6 +205,12 @@ public sealed partial class MainWindow : Window
         ViewModel.SetDestinations(destinations);
         ViewModel.SetCompanies(companies);
         ViewModel.SetPrices(prices);
+    }
+
+    private async Task LoadCustomersAsync()
+    {
+        var customers = await _repository.GetCustomersAsync();
+        ViewModel.SetCustomers(customers);
     }
 
     private async void OnLinePriceSelectionChanged(object sender, SelectionChangedEventArgs e)

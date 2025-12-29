@@ -23,6 +23,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private double _subtotal;
     private double _advance;
     private double _total;
+    private Customer? _selectedCustomer;
+    private bool _isUpdatingCustomerSelection;
 
     private DateTimeOffset _newLineDate = DateTimeOffset.Now;
     private string _selectedCompanyName = string.Empty;
@@ -52,6 +54,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<InvoiceLine> Lines { get; } = new();
+    public ObservableCollection<Customer> Customers { get; } = new();
     public ObservableCollection<Origin> Origins { get; } = new();
     public ObservableCollection<Destination> Destinations { get; } = new();
     public ObservableCollection<Company> Companies { get; } = new();
@@ -79,7 +82,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string CustomerName
     {
         get => _customerName;
-        set => SetField(ref _customerName, value);
+        set
+        {
+            if (SetField(ref _customerName, value))
+            {
+                if (!_isUpdatingCustomerSelection
+                    && _selectedCustomer is not null
+                    && !string.Equals(_selectedCustomer.Name, value, StringComparison.OrdinalIgnoreCase))
+                {
+                    SelectedCustomer = null;
+                }
+            }
+        }
     }
 
     public string CustomerAddress
@@ -104,6 +118,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _customerPhone;
         set => SetField(ref _customerPhone, value);
+    }
+
+    public Customer? SelectedCustomer
+    {
+        get => _selectedCustomer;
+        set
+        {
+            if (SetField(ref _selectedCustomer, value) && value is not null)
+            {
+                _isUpdatingCustomerSelection = true;
+                CustomerName = value.Name;
+                CustomerAddress = value.Address;
+                CustomerCity = value.City;
+                CustomerState = value.State;
+                CustomerPhone = value.Phone;
+                _isUpdatingCustomerSelection = false;
+            }
+        }
     }
 
     public double Subtotal
@@ -292,6 +324,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public void SetCustomers(IEnumerable<Customer> customers)
+    {
+        Customers.Clear();
+        foreach (var customer in customers)
+        {
+            Customers.Add(customer);
+        }
+
+        if (!string.IsNullOrWhiteSpace(CustomerName))
+        {
+            SelectedCustomer = Customers.FirstOrDefault(item =>
+                string.Equals(item.Name, CustomerName, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
     public void SetDestinations(IEnumerable<Destination> destinations)
     {
         Destinations.Clear();
@@ -399,6 +446,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CustomerCity = invoice.Customer.City;
         CustomerState = invoice.Customer.State;
         CustomerPhone = invoice.Customer.Phone;
+        SelectedCustomer = Customers.FirstOrDefault(customer =>
+            string.Equals(customer.Name, invoice.Customer.Name, StringComparison.OrdinalIgnoreCase));
 
         Lines.Clear();
         foreach (var line in invoice.Lines)
