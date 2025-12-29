@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -31,6 +32,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _newLineEmpties = string.Empty;
     private string _newLineFb = string.Empty;
     private double _newLineAmount;
+    private string _newOriginName = string.Empty;
+    private string _newDestinationName = string.Empty;
 
     public MainViewModel()
     {
@@ -40,6 +43,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<InvoiceLine> Lines { get; } = new();
+    public ObservableCollection<Origin> Origins { get; } = new();
+    public ObservableCollection<Destination> Destinations { get; } = new();
 
     public double InvoiceNumber
     {
@@ -173,6 +178,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newLineAmount, value);
     }
 
+    public string NewOriginName
+    {
+        get => _newOriginName;
+        set => SetField(ref _newOriginName, value);
+    }
+
+    public string NewDestinationName
+    {
+        get => _newDestinationName;
+        set => SetField(ref _newDestinationName, value);
+    }
+
     public string SubtotalFormatted => Subtotal.ToString("C", CultureInfo.CurrentCulture);
 
     public string TotalFormatted => Total.ToString("C", CultureInfo.CurrentCulture);
@@ -198,6 +215,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public void RemoveLine(InvoiceLine line)
     {
         Lines.Remove(line);
+    }
+
+    public void SetOrigins(IEnumerable<Origin> origins)
+    {
+        Origins.Clear();
+        foreach (var origin in origins)
+        {
+            Origins.Add(origin);
+        }
+    }
+
+    public void SetDestinations(IEnumerable<Destination> destinations)
+    {
+        Destinations.Clear();
+        foreach (var destination in destinations)
+        {
+            Destinations.Add(destination);
+        }
     }
 
     public Invoice ToInvoice()
