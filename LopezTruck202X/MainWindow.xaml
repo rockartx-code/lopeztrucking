@@ -17,7 +17,10 @@
 
     <ScrollViewer>
         <StackPanel Spacing="16" Padding="24">
-            <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
+                <Button Content="Catálogos" Click="OnOpenCatalogs" />
+            </StackPanel>
 
             <Grid ColumnSpacing="16" RowSpacing="12">
                 <Grid.ColumnDefinitions>
@@ -104,11 +107,17 @@
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
                         <TextBlock Text="Origen" />
-                        <TextBox Text="{x:Bind ViewModel.NewLineFrom, Mode=TwoWay}" />
+                        <ComboBox ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Name"
+                                  SelectedValue="{x:Bind ViewModel.NewLineFrom, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="3" Spacing="4">
                         <TextBlock Text="Destino" />
-                        <TextBox Text="{x:Bind ViewModel.NewLineTo, Mode=TwoWay}" />
+                        <ComboBox ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Name"
+                                  SelectedValue="{x:Bind ViewModel.NewLineTo, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
@@ -185,4 +194,57 @@
             </Grid>
         </StackPanel>
     </ScrollViewer>
+
+    <ContentDialog
+        x:Name="CatalogDialog"
+        Title="Catálogos"
+        PrimaryButtonText="Cerrar">
+        <ScrollViewer>
+            <StackPanel Spacing="16" Padding="0">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Orígenes" FontSize="16" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox Width="280" PlaceholderText="Nuevo origen" Text="{x:Bind ViewModel.NewOriginName, Mode=TwoWay}" />
+                        <Button Content="Agregar" Click="OnAddOrigin" />
+                    </StackPanel>
+                    <ListView ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Origin">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay}" />
+                                    <Button Grid.Column="1" Content="Actualizar" Tag="{x:Bind}" Click="OnUpdateOrigin" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Destinos" FontSize="16" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox Width="280" PlaceholderText="Nuevo destino" Text="{x:Bind ViewModel.NewDestinationName, Mode=TwoWay}" />
+                        <Button Content="Agregar" Click="OnAddDestination" />
+                    </StackPanel>
+                    <ListView ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Destination">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay}" />
+                                    <Button Grid.Column="1" Content="Actualizar" Tag="{x:Bind}" Click="OnUpdateDestination" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </ContentDialog>
 </Window>

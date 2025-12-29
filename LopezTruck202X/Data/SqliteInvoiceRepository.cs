@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LopezTruck202X.Models;
 using Microsoft.Data.Sqlite;
@@ -54,6 +55,16 @@ public sealed class SqliteInvoiceRepository
                 Fb TEXT,
                 Amount REAL NOT NULL,
                 FOREIGN KEY(InvoiceId) REFERENCES Invoices(Id)
+            );
+
+            CREATE TABLE IF NOT EXISTS Origins (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL UNIQUE
+            );
+
+            CREATE TABLE IF NOT EXISTS Destinations (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL UNIQUE
             );
             """;
         await command.ExecuteNonQueryAsync();
@@ -199,5 +210,113 @@ public sealed class SqliteInvoiceRepository
         insertCommand.Parameters.AddWithValue("$total", invoice.Total);
         var newId = await insertCommand.ExecuteScalarAsync();
         return Convert.ToInt32(newId);
+    }
+
+    public async Task<IReadOnlyList<Origin>> GetOriginsAsync()
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Name FROM Origins ORDER BY Name";
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var results = new List<Origin>();
+        while (await reader.ReadAsync())
+        {
+            results.Add(new Origin
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1)
+            });
+        }
+
+        return results;
+    }
+
+    public async Task<IReadOnlyList<Destination>> GetDestinationsAsync()
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Name FROM Destinations ORDER BY Name";
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var results = new List<Destination>();
+        while (await reader.ReadAsync())
+        {
+            results.Add(new Destination
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1)
+            });
+        }
+
+        return results;
+    }
+
+    public async Task<int> AddOriginAsync(string name)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Origins (Name)
+            VALUES ($name);
+            SELECT last_insert_rowid();
+            """;
+        command.Parameters.AddWithValue("$name", name);
+        var newId = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(newId);
+    }
+
+    public async Task<int> AddDestinationAsync(string name)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Destinations (Name)
+            VALUES ($name);
+            SELECT last_insert_rowid();
+            """;
+        command.Parameters.AddWithValue("$name", name);
+        var newId = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(newId);
+    }
+
+    public async Task UpdateOriginAsync(Origin origin)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Origins
+            SET Name = $name
+            WHERE Id = $id;
+            """;
+        command.Parameters.AddWithValue("$name", origin.Name);
+        command.Parameters.AddWithValue("$id", origin.Id);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task UpdateDestinationAsync(Destination destination)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Destinations
+            SET Name = $name
+            WHERE Id = $id;
+            """;
+        command.Parameters.AddWithValue("$name", destination.Name);
+        command.Parameters.AddWithValue("$id", destination.Id);
+        await command.ExecuteNonQueryAsync();
     }
 }
