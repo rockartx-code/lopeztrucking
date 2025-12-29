@@ -111,6 +111,25 @@ public sealed partial class MainWindow : Window
         await LoadCatalogsAsync();
     }
 
+    private async void OnAddCompany(object sender, RoutedEventArgs e)
+    {
+        var name = ViewModel.NewCompanyName?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        if (ViewModel.Companies.Any(company => string.Equals(company.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            ViewModel.NewCompanyName = string.Empty;
+            return;
+        }
+
+        await _repository.AddCompanyAsync(name);
+        ViewModel.NewCompanyName = string.Empty;
+        await LoadCatalogsAsync();
+    }
+
     private async void OnUpdateOrigin(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: Origin origin })
@@ -123,6 +142,22 @@ public sealed partial class MainWindow : Window
 
             origin.Name = name;
             await _repository.UpdateOriginAsync(origin);
+            await LoadCatalogsAsync();
+        }
+    }
+
+    private async void OnUpdateCompany(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: Company company })
+        {
+            var name = company.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return;
+            }
+
+            company.Name = name;
+            await _repository.UpdateCompanyAsync(company);
             await LoadCatalogsAsync();
         }
     }
@@ -143,11 +178,22 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void OnDeleteCompany(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: Company company })
+        {
+            await _repository.DeleteCompanyAsync(company.Id);
+            await LoadCatalogsAsync();
+        }
+    }
+
     private async Task LoadCatalogsAsync()
     {
         var origins = await _repository.GetOriginsAsync();
         var destinations = await _repository.GetDestinationsAsync();
+        var companies = await _repository.GetCompaniesAsync();
         ViewModel.SetOrigins(origins);
         ViewModel.SetDestinations(destinations);
+        ViewModel.SetCompanies(companies);
     }
 }

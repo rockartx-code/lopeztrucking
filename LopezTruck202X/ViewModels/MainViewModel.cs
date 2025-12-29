@@ -25,7 +25,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private double _total;
 
     private DateTimeOffset _newLineDate = DateTimeOffset.Now;
-    private string _newLineCompany = string.Empty;
+    private string _selectedCompanyName = string.Empty;
     private string _newLineFrom = string.Empty;
     private string _newLineTo = string.Empty;
     private string _newLineDispatch = string.Empty;
@@ -34,6 +34,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private double _newLineAmount;
     private string _newOriginName = string.Empty;
     private string _newDestinationName = string.Empty;
+    private string _newCompanyName = string.Empty;
 
     public MainViewModel()
     {
@@ -45,6 +46,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<InvoiceLine> Lines { get; } = new();
     public ObservableCollection<Origin> Origins { get; } = new();
     public ObservableCollection<Destination> Destinations { get; } = new();
+    public ObservableCollection<Company> Companies { get; } = new();
 
     public double InvoiceNumber
     {
@@ -136,10 +138,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newLineDate, value);
     }
 
-    public string NewLineCompany
+    public string SelectedCompanyName
     {
-        get => _newLineCompany;
-        set => SetField(ref _newLineCompany, value);
+        get => _selectedCompanyName;
+        set => SetField(ref _selectedCompanyName, value);
     }
 
     public string NewLineFrom
@@ -190,6 +192,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newDestinationName, value);
     }
 
+    public string NewCompanyName
+    {
+        get => _newCompanyName;
+        set => SetField(ref _newCompanyName, value);
+    }
+
     public string SubtotalFormatted => Subtotal.ToString("C", CultureInfo.CurrentCulture);
 
     public string TotalFormatted => Total.ToString("C", CultureInfo.CurrentCulture);
@@ -199,7 +207,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var line = new InvoiceLine
         {
             Date = NewLineDate,
-            Company = NewLineCompany,
+            Company = SelectedCompanyName,
             From = NewLineFrom,
             To = NewLineTo,
             Dispatch = NewLineDispatch,
@@ -235,6 +243,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public void SetCompanies(IEnumerable<Company> companies)
+    {
+        Companies.Clear();
+        foreach (var company in companies)
+        {
+            Companies.Add(company);
+        }
+    }
+
     public Invoice ToInvoice()
     {
         return new Invoice
@@ -260,7 +277,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void ResetNewLine()
     {
         NewLineDate = DateTimeOffset.Now;
-        NewLineCompany = string.Empty;
+        SelectedCompanyName = string.Empty;
         NewLineFrom = string.Empty;
         NewLineTo = string.Empty;
         NewLineDispatch = string.Empty;

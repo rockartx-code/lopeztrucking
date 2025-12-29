@@ -66,6 +66,11 @@ public sealed class SqliteInvoiceRepository
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Name TEXT NOT NULL UNIQUE
             );
+
+            CREATE TABLE IF NOT EXISTS Companies (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL UNIQUE
+            );
             """;
         await command.ExecuteNonQueryAsync();
     }
@@ -272,6 +277,44 @@ public sealed class SqliteInvoiceRepository
         return Convert.ToInt32(newId);
     }
 
+    public async Task<IReadOnlyList<Company>> GetCompaniesAsync()
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Name FROM Companies ORDER BY Name";
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var results = new List<Company>();
+        while (await reader.ReadAsync())
+        {
+            results.Add(new Company
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1)
+            });
+        }
+
+        return results;
+    }
+
+    public async Task<int> AddCompanyAsync(string name)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Companies (Name)
+            VALUES ($name);
+            SELECT last_insert_rowid();
+            """;
+        command.Parameters.AddWithValue("$name", name);
+        var newId = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(newId);
+    }
+
     public async Task<int> AddDestinationAsync(string name)
     {
         await using var connection = _database.CreateConnection();
@@ -304,6 +347,22 @@ public sealed class SqliteInvoiceRepository
         await command.ExecuteNonQueryAsync();
     }
 
+    public async Task UpdateCompanyAsync(Company company)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Companies
+            SET Name = $name
+            WHERE Id = $id;
+            """;
+        command.Parameters.AddWithValue("$name", company.Name);
+        command.Parameters.AddWithValue("$id", company.Id);
+        await command.ExecuteNonQueryAsync();
+    }
+
     public async Task UpdateDestinationAsync(Destination destination)
     {
         await using var connection = _database.CreateConnection();
@@ -317,6 +376,20 @@ public sealed class SqliteInvoiceRepository
             """;
         command.Parameters.AddWithValue("$name", destination.Name);
         command.Parameters.AddWithValue("$id", destination.Id);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task DeleteCompanyAsync(int companyId)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM Companies
+            WHERE Id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", companyId);
         await command.ExecuteNonQueryAsync();
     }
 }
