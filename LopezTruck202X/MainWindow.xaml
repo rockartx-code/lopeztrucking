@@ -103,7 +103,10 @@
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
                         <TextBlock Text="Compañía" />
-                        <TextBox Text="{x:Bind ViewModel.NewLineCompany, Mode=TwoWay}" />
+                        <ComboBox ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Name"
+                                  SelectedValue="{x:Bind ViewModel.SelectedCompanyName, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
                         <TextBlock Text="Origen" />
@@ -239,6 +242,30 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay}" />
                                     <Button Grid.Column="1" Content="Actualizar" Tag="{x:Bind}" Click="OnUpdateDestination" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Compañías" FontSize="16" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox Width="280" PlaceholderText="Nueva compañía" Text="{x:Bind ViewModel.NewCompanyName, Mode=TwoWay}" />
+                        <Button Content="Agregar" Click="OnAddCompany" />
+                    </StackPanel>
+                    <ListView ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Company">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay}" />
+                                    <Button Grid.Column="1" Content="Actualizar" Tag="{x:Bind}" Click="OnUpdateCompany" />
+                                    <Button Grid.Column="2" Content="Eliminar" Tag="{x:Bind}" Click="OnDeleteCompany" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
