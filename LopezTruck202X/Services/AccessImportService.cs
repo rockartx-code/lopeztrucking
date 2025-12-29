@@ -300,7 +300,8 @@ public sealed class AccessImportService
         IDictionary<string, int> lookup,
         string customerName)
     {
-        if (lookup.TryGetValue(customerName, out var existingId))
+        var normalizedName = customerName.Trim();
+        if (lookup.TryGetValue(normalizedName, out var existingId))
         {
             return existingId;
         }
@@ -311,10 +312,10 @@ public sealed class AccessImportService
             VALUES ($name, '', '', '', '');
             SELECT last_insert_rowid();
             """;
-        insert.Parameters.AddWithValue("$name", customerName.Trim());
+        insert.Parameters.AddWithValue("$name", normalizedName);
         var newId = await insert.ExecuteScalarAsync();
         var id = Convert.ToInt32(newId, CultureInfo.InvariantCulture);
-        lookup[customerName] = id;
+        lookup[normalizedName] = id;
         return id;
     }
 
