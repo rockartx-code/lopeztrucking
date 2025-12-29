@@ -422,13 +422,13 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Invoice No." />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Number}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Number}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind DateDisplay}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DateDisplay}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Check" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind CheckNumber}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CheckNumber}" />
                     </Grid>
                     <Grid ColumnSpacing="16" RowSpacing="8">
                         <Grid.ColumnDefinitions>
@@ -442,19 +442,19 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Cliente" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Customer.Name}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Customer.Name}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Teléfono" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind Customer.Phone}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Customer.Phone}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Dirección" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind Customer.Address}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Customer.Address}" />
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Líneas" FontWeight="SemiBold" />
-                    <ListView ItemsSource="{x:Bind Lines}">
+                    <ListView ItemsSource="{Binding Lines}">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="models:InvoiceLine">
                                 <Grid ColumnSpacing="8" Padding="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -489,9 +489,9 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{x:Bind AdvanceDisplay}" />
-                    <TextBlock Grid.Column="1" Text="{x:Bind SubtotalDisplay}" />
-                    <TextBlock Grid.Column="2" Text="{x:Bind TotalDisplay}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="0" Text="{Binding AdvanceDisplay}" />
+                    <TextBlock Grid.Column="1" Text="{Binding SubtotalDisplay}" />
+                    <TextBlock Grid.Column="2" Text="{Binding TotalDisplay}" FontWeight="SemiBold" />
                 </Grid>
             </StackPanel>
             </ScrollViewer>
