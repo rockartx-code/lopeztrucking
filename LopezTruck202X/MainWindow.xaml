@@ -147,6 +147,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
+
                                 <TextBlock Grid.Column="0" Text="{x:Bind DateDisplay}" />
                                 <TextBlock Grid.Column="1" Text="{x:Bind Company}" />
                                 <TextBlock Grid.Column="2" Text="{x:Bind From}" />
