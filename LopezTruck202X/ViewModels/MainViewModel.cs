@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using LopezTruck202X.Models;
 
@@ -90,7 +91,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public double Subtotal
     {
         get => _subtotal;
-        private set => SetField(ref _subtotal, value);
+        private set
+        {
+            if (SetField(ref _subtotal, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SubtotalFormatted)));
+            }
+        }
     }
 
     public double Advance
@@ -108,7 +115,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public double Total
     {
         get => _total;
-        private set => SetField(ref _total, value);
+        private set
+        {
+            if (SetField(ref _total, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalFormatted)));
+            }
+        }
     }
 
     public DateTimeOffset NewLineDate
@@ -158,6 +171,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _newLineAmount;
         set => SetField(ref _newLineAmount, value);
     }
+
+    public string SubtotalFormatted => Subtotal.ToString("C", CultureInfo.CurrentCulture);
+
+    public string TotalFormatted => Total.ToString("C", CultureInfo.CurrentCulture);
 
     public void AddLine()
     {
