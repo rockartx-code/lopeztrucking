@@ -15,8 +15,9 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <ScrollViewer>
-        <StackPanel Spacing="16" Padding="24">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Spacing="16" Padding="24">
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                 <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
                 <Button Content="Catálogos" Click="OnOpenCatalogs" />
@@ -63,7 +64,7 @@
                     <TextBox Text="{x:Bind ViewModel.CustomerPhone, Mode=TwoWay}" />
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="6" VerticalAlignment="End">
+                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="6" VerticalAlignment="Bottom">
                     <Button Content="Eliminar cliente"
                             Tag="{x:Bind ViewModel.SelectedCustomer, Mode=OneWay}"
                             Click="OnDeleteCustomer" />
@@ -209,15 +210,15 @@
                     <Button Content="Generar PDF" Click="OnGeneratePdf" />
                 </StackPanel>
             </Grid>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
 
-    <ContentDialog
-        x:Name="CatalogDialog"
-        Title="Catálogos"
-        PrimaryButtonText="Cerrar">
-        <ScrollViewer>
-            <StackPanel Spacing="16" Padding="0">
+        <ContentDialog
+            x:Name="CatalogDialog"
+            Title="Catálogos"
+            PrimaryButtonText="Cerrar">
+            <ScrollViewer>
+                <StackPanel Spacing="16" Padding="0">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Orígenes" FontSize="16" FontWeight="SemiBold" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -282,11 +283,11 @@
                                     <Button Grid.Column="2" Content="Eliminar" Tag="{x:Bind}" Click="OnDeleteCompany" />
                                 </Grid>
                             </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </StackPanel>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
 
-            <StackPanel Spacing="8">
+                <StackPanel Spacing="8">
                 <TextBlock Text="Precios" FontSize="16" FontWeight="SemiBold" />
                 <Grid ColumnSpacing="8" RowSpacing="8">
                     <Grid.ColumnDefinitions>
@@ -343,14 +344,14 @@
             </StackPanel>
         </StackPanel>
     </ScrollViewer>
-</ContentDialog>
+        </ContentDialog>
 
-    <ContentDialog
-        x:Name="SearchDialog"
-        Title="Buscar invoices"
-        PrimaryButtonText="Cerrar">
-        <ScrollViewer>
-            <StackPanel Spacing="16" Padding="0">
+        <ContentDialog
+            x:Name="SearchDialog"
+            Title="Buscar invoices"
+            PrimaryButtonText="Cerrar">
+            <ScrollViewer>
+                <StackPanel Spacing="16" Padding="0">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Filtros" FontSize="16" FontWeight="SemiBold" />
                     <Grid ColumnSpacing="12" RowSpacing="8">
@@ -396,17 +397,17 @@
                     </ListView>
                     <Button Content="Cargar seleccionada" HorizontalAlignment="Left" Click="OnLoadSelectedInvoice" />
                 </StackPanel>
-            </StackPanel>
-        </ScrollViewer>
-    </ContentDialog>
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
 
-    <ContentDialog
-        x:Name="InvoiceSummaryDialog"
-        Title="Resumen de invoice"
-        PrimaryButtonText="Generar PDF"
-        CloseButtonText="Cancelar">
-        <ScrollViewer>
-            <StackPanel Spacing="16" Padding="0">
+        <ContentDialog
+            x:Name="InvoiceSummaryDialog"
+            Title="Resumen de invoice"
+            PrimaryButtonText="Generar PDF"
+            CloseButtonText="Cancelar">
+            <ScrollViewer>
+                <StackPanel Spacing="16" Padding="0" x:DataType="models:Invoice">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Encabezado" FontWeight="SemiBold" />
                     <Grid ColumnSpacing="16" RowSpacing="8">
@@ -421,13 +422,13 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Invoice No." />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Number}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Number}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Date, StringFormat='{}{0:MM/dd/yyyy}'}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind Date, StringFormat='{}{0:MM/dd/yyyy}'}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Check" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CheckNumber}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind CheckNumber}" />
                     </Grid>
                     <Grid ColumnSpacing="16" RowSpacing="8">
                         <Grid.ColumnDefinitions>
@@ -441,19 +442,19 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Cliente" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Customer.Name}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Customer.Name}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Teléfono" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Customer.Phone}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind Customer.Phone}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Dirección" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Customer.Address}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind Customer.Address}" />
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Líneas" FontWeight="SemiBold" />
-                    <ListView ItemsSource="{Binding Lines}">
+                    <ListView ItemsSource="{x:Bind Lines}">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="models:InvoiceLine">
                                 <Grid ColumnSpacing="8" Padding="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -488,11 +489,12 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{Binding Advance, StringFormat='Advance: {0:C}'}" />
-                    <TextBlock Grid.Column="1" Text="{Binding Subtotal, StringFormat='Subtotal: {0:C}'}" />
-                    <TextBlock Grid.Column="2" Text="{Binding Total, StringFormat='Total: {0:C}'}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="0" Text="{x:Bind Advance, StringFormat='Advance: {0:C}'}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind Subtotal, StringFormat='Subtotal: {0:C}'}" />
+                    <TextBlock Grid.Column="2" Text="{x:Bind Total, StringFormat='Total: {0:C}'}" FontWeight="SemiBold" />
                 </Grid>
             </StackPanel>
-        </ScrollViewer>
-    </ContentDialog>
+            </ScrollViewer>
+        </ContentDialog>
+    </Grid>
 </Window>
