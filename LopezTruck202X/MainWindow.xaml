@@ -62,6 +62,12 @@
                     <TextBlock Text="Teléfono" />
                     <TextBox Text="{x:Bind ViewModel.CustomerPhone, Mode=TwoWay}" />
                 </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="6" VerticalAlignment="End">
+                    <Button Content="Eliminar cliente"
+                            Tag="{x:Bind ViewModel.SelectedCustomer, Mode=OneWay}"
+                            Click="OnDeleteCustomer" />
+                </StackPanel>
             </Grid>
 
             <Grid ColumnSpacing="16" RowSpacing="12">

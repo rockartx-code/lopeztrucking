@@ -375,6 +375,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public void ClearCustomerSelection()
+    {
+        _isUpdatingCustomerSelection = true;
+        SelectedCustomer = null;
+        _isUpdatingCustomerSelection = false;
+        CustomerName = string.Empty;
+        CustomerAddress = string.Empty;
+        CustomerCity = string.Empty;
+        CustomerState = string.Empty;
+        CustomerPhone = string.Empty;
+    }
+
     public bool TryGetSelectedRouteIds(out int companyId, out int originId, out int destinationId)
     {
         companyId = 0;
