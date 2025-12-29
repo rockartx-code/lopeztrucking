@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
 using LopezTruck202X.Models;
 using Microsoft.Data.Sqlite;
@@ -85,7 +86,7 @@ public sealed class SqliteInvoiceRepository
                 FOREIGN KEY(DestinationId) REFERENCES Destinations(Id)
             );
             """;
-        await command.ExecuteNonQueryAsync();
+        await ExecuteMigrationNonQueryAsync(command);
 
         await EnsureCustomerIsActiveColumnAsync(connection);
         await EnsureInvoiceNumberIsNotUniqueAsync(connection);
@@ -441,7 +442,7 @@ public sealed class SqliteInvoiceRepository
     {
         var checkCommand = connection.CreateCommand();
         checkCommand.CommandText = "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'Invoices';";
-        var tableSql = await checkCommand.ExecuteScalarAsync() as string;
+        var tableSql = await ExecuteMigrationScalarAsync(checkCommand) as string;
 
         if (string.IsNullOrWhiteSpace(tableSql) || !tableSql.Contains("Number INTEGER NOT NULL UNIQUE", StringComparison.OrdinalIgnoreCase))
         {
@@ -450,7 +451,7 @@ public sealed class SqliteInvoiceRepository
 
         var pragmaCommand = connection.CreateCommand();
         pragmaCommand.CommandText = "PRAGMA foreign_keys = OFF;";
-        await pragmaCommand.ExecuteNonQueryAsync();
+        await ExecuteMigrationNonQueryAsync(pragmaCommand);
 
         await using var transaction = await connection.BeginTransactionAsync();
 
@@ -475,13 +476,13 @@ public sealed class SqliteInvoiceRepository
             DROP TABLE Invoices;
             ALTER TABLE Invoices_new RENAME TO Invoices;
             """;
-        await rebuildCommand.ExecuteNonQueryAsync();
+        await ExecuteMigrationNonQueryAsync(rebuildCommand);
 
         await transaction.CommitAsync();
 
         var enableForeignKeysCommand = connection.CreateCommand();
         enableForeignKeysCommand.CommandText = "PRAGMA foreign_keys = ON;";
-        await enableForeignKeysCommand.ExecuteNonQueryAsync();
+        await ExecuteMigrationNonQueryAsync(enableForeignKeysCommand);
     }
 
     public async Task<IReadOnlyList<Origin>> GetOriginsAsync()
@@ -698,11 +699,67 @@ public sealed class SqliteInvoiceRepository
         return result is not null && Convert.ToInt32(result) == 0;
     }
 
+    private static async Task ExecuteMigrationNonQueryAsync(SqliteCommand command)
+    {
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+        }
+        catch (SqliteException ex)
+        {
+            throw new InvalidOperationException(BuildMigrationErrorMessage(command), ex);
+        }
+    }
+
+    private static async Task<object?> ExecuteMigrationScalarAsync(SqliteCommand command)
+    {
+        try
+        {
+            return await command.ExecuteScalarAsync();
+        }
+        catch (SqliteException ex)
+        {
+            throw new InvalidOperationException(BuildMigrationErrorMessage(command), ex);
+        }
+    }
+
+    private static async Task<SqliteDataReader> ExecuteMigrationReaderAsync(SqliteCommand command)
+    {
+        try
+        {
+            return await command.ExecuteReaderAsync();
+        }
+        catch (SqliteException ex)
+        {
+            throw new InvalidOperationException(BuildMigrationErrorMessage(command), ex);
+        }
+    }
+
+    private static string BuildMigrationErrorMessage(SqliteCommand command)
+    {
+        var builder = new StringBuilder("Migration failed while executing SQL:");
+        builder.AppendLine();
+        builder.AppendLine(command.CommandText);
+
+        if (command.Parameters.Count == 0)
+        {
+            return builder.ToString();
+        }
+
+        builder.AppendLine("Parameters:");
+        foreach (SqliteParameter parameter in command.Parameters)
+        {
+            builder.AppendLine($"  {parameter.ParameterName} = {parameter.Value}");
+        }
+
+        return builder.ToString();
+    }
+
     private static async Task EnsureCustomerIsActiveColumnAsync(SqliteConnection connection)
     {
         var command = connection.CreateCommand();
         command.CommandText = "PRAGMA table_info(Customers);";
-        await using var reader = await command.ExecuteReaderAsync();
+        await using var reader = await ExecuteMigrationReaderAsync(command);
         var hasIsActive = false;
         while (await reader.ReadAsync())
         {
@@ -720,7 +777,7 @@ public sealed class SqliteInvoiceRepository
 
         var alterCommand = connection.CreateCommand();
         alterCommand.CommandText = "ALTER TABLE Customers ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;";
-        await alterCommand.ExecuteNonQueryAsync();
+        await ExecuteMigrationNonQueryAsync(alterCommand);
     }
 
     public async Task<double?> GetPriceAmountAsync(int companyId, int originId, int destinationId)
