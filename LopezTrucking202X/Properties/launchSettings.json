@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "LopezTrucking202X (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "LopezTrucking202X (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
