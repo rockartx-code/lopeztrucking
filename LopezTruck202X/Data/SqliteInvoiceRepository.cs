@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using LopezTruck202X.Models;
 using Microsoft.Data.Sqlite;
@@ -95,6 +96,148 @@ public sealed class SqliteInvoiceRepository
         command.CommandText = "SELECT COALESCE(MAX(Number), 0) + 1 FROM Invoices";
         var result = await command.ExecuteScalarAsync();
         return Convert.ToInt32(result);
+    }
+
+    public async Task<IReadOnlyList<InvoiceSummary>> GetInvoicesAsync(
+        DateTimeOffset? startDate,
+        DateTimeOffset? endDate,
+        string? customerName)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        var filters = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(customerName))
+        {
+            filters.Add("Customers.Name LIKE $customerName");
+            command.Parameters.AddWithValue("$customerName", $"%{customerName.Trim()}%");
+        }
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.Date;
+            filters.Add("Invoices.Date >= $startDate");
+            command.Parameters.AddWithValue("$startDate", start.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.Date.AddDays(1).AddTicks(-1);
+            filters.Add("Invoices.Date <= $endDate");
+            command.Parameters.AddWithValue("$endDate", end.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        var whereClause = filters.Count > 0 ? $"WHERE {string.Join(" AND ", filters)}" : string.Empty;
+        command.CommandText = $"""
+            SELECT Invoices.Id,
+                   Invoices.Number,
+                   Invoices.Date,
+                   Customers.Name,
+                   Invoices.Total
+            FROM Invoices
+            JOIN Customers ON Customers.Id = Invoices.CustomerId
+            {whereClause}
+            ORDER BY Invoices.Date DESC, Invoices.Number DESC;
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync();
+        var results = new List<InvoiceSummary>();
+
+        while (await reader.ReadAsync())
+        {
+            results.Add(new InvoiceSummary
+            {
+                Id = reader.GetInt32(0),
+                Number = reader.GetInt32(1),
+                Date = DateTimeOffset.Parse(reader.GetString(2), CultureInfo.InvariantCulture),
+                CustomerName = reader.GetString(3),
+                Total = Convert.ToDecimal(reader.GetDouble(4))
+            });
+        }
+
+        return results;
+    }
+
+    public async Task<Invoice?> GetInvoiceAsync(int invoiceId)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var headerCommand = connection.CreateCommand();
+        headerCommand.CommandText = """
+            SELECT Invoices.Id,
+                   Invoices.Number,
+                   Invoices.Date,
+                   Invoices.CheckNumber,
+                   Invoices.Subtotal,
+                   Invoices.Advance,
+                   Invoices.Total,
+                   Customers.Id,
+                   Customers.Name,
+                   Customers.Address,
+                   Customers.City,
+                   Customers.State,
+                   Customers.Phone
+            FROM Invoices
+            JOIN Customers ON Customers.Id = Invoices.CustomerId
+            WHERE Invoices.Id = $invoiceId;
+            """;
+        headerCommand.Parameters.AddWithValue("$invoiceId", invoiceId);
+
+        await using var reader = await headerCommand.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        var invoice = new Invoice
+        {
+            Id = reader.GetInt32(0),
+            Number = reader.GetInt32(1),
+            Date = DateTimeOffset.Parse(reader.GetString(2), CultureInfo.InvariantCulture),
+            CheckNumber = reader.GetString(3),
+            Subtotal = Convert.ToDecimal(reader.GetDouble(4)),
+            Advance = Convert.ToDecimal(reader.GetDouble(5)),
+            Total = Convert.ToDecimal(reader.GetDouble(6)),
+            Customer = new Customer
+            {
+                Id = reader.GetInt32(7),
+                Name = reader.GetString(8),
+                Address = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                City = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
+                State = reader.IsDBNull(11) ? string.Empty : reader.GetString(11),
+                Phone = reader.IsDBNull(12) ? string.Empty : reader.GetString(12)
+            }
+        };
+
+        var lineCommand = connection.CreateCommand();
+        lineCommand.CommandText = """
+            SELECT Date, Company, Origin, Destination, Dispatch, Empties, Fb, Amount
+            FROM InvoiceLines
+            WHERE InvoiceId = $invoiceId
+            ORDER BY Date;
+            """;
+        lineCommand.Parameters.AddWithValue("$invoiceId", invoiceId);
+
+        await using var lineReader = await lineCommand.ExecuteReaderAsync();
+        while (await lineReader.ReadAsync())
+        {
+            invoice.Lines.Add(new InvoiceLine
+            {
+                Date = DateTimeOffset.Parse(lineReader.GetString(0), CultureInfo.InvariantCulture),
+                Company = lineReader.IsDBNull(1) ? string.Empty : lineReader.GetString(1),
+                From = lineReader.IsDBNull(2) ? string.Empty : lineReader.GetString(2),
+                To = lineReader.IsDBNull(3) ? string.Empty : lineReader.GetString(3),
+                Dispatch = lineReader.IsDBNull(4) ? string.Empty : lineReader.GetString(4),
+                Empties = lineReader.IsDBNull(5) ? string.Empty : lineReader.GetString(5),
+                Fb = lineReader.IsDBNull(6) ? string.Empty : lineReader.GetString(6),
+                Amount = Convert.ToDecimal(lineReader.GetDouble(7))
+            });
+        }
+
+        return invoice;
     }
 
     public async Task SaveInvoiceAsync(Invoice invoice)

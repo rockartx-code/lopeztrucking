@@ -39,6 +39,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private int? _newPriceOriginId;
     private int? _newPriceDestinationId;
     private double _newPriceAmount;
+    private DateTimeOffset? _searchStartDate;
+    private DateTimeOffset? _searchEndDate;
+    private string _searchCustomerName = string.Empty;
+    private InvoiceSummary? _selectedInvoiceSummary;
 
     public MainViewModel()
     {
@@ -52,6 +56,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<Destination> Destinations { get; } = new();
     public ObservableCollection<Company> Companies { get; } = new();
     public ObservableCollection<Price> Prices { get; } = new();
+    public ObservableCollection<InvoiceSummary> SearchResults { get; } = new();
 
     public double InvoiceNumber
     {
@@ -227,6 +232,30 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newPriceAmount, value);
     }
 
+    public DateTimeOffset? SearchStartDate
+    {
+        get => _searchStartDate;
+        set => SetField(ref _searchStartDate, value);
+    }
+
+    public DateTimeOffset? SearchEndDate
+    {
+        get => _searchEndDate;
+        set => SetField(ref _searchEndDate, value);
+    }
+
+    public string SearchCustomerName
+    {
+        get => _searchCustomerName;
+        set => SetField(ref _searchCustomerName, value);
+    }
+
+    public InvoiceSummary? SelectedInvoiceSummary
+    {
+        get => _selectedInvoiceSummary;
+        set => SetField(ref _selectedInvoiceSummary, value);
+    }
+
     public string SubtotalFormatted => Subtotal.ToString("C", CultureInfo.CurrentCulture);
 
     public string TotalFormatted => Total.ToString("C", CultureInfo.CurrentCulture);
@@ -290,6 +319,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public void SetSearchResults(IEnumerable<InvoiceSummary> invoices)
+    {
+        SearchResults.Clear();
+        foreach (var invoice in invoices)
+        {
+            SearchResults.Add(invoice);
+        }
+    }
+
     public bool TryGetSelectedRouteIds(out int companyId, out int originId, out int destinationId)
     {
         companyId = 0;
@@ -349,6 +387,37 @@ public sealed class MainViewModel : INotifyPropertyChanged
             Total = Convert.ToDecimal(Total),
             Lines = Lines.ToList()
         };
+    }
+
+    public void LoadInvoice(Invoice invoice)
+    {
+        InvoiceNumber = invoice.Number;
+        InvoiceDate = invoice.Date;
+        CheckNumber = invoice.CheckNumber;
+        CustomerName = invoice.Customer.Name;
+        CustomerAddress = invoice.Customer.Address;
+        CustomerCity = invoice.Customer.City;
+        CustomerState = invoice.Customer.State;
+        CustomerPhone = invoice.Customer.Phone;
+
+        Lines.Clear();
+        foreach (var line in invoice.Lines)
+        {
+            Lines.Add(new InvoiceLine
+            {
+                Date = line.Date,
+                Company = line.Company,
+                From = line.From,
+                To = line.To,
+                Dispatch = line.Dispatch,
+                Empties = line.Empties,
+                Fb = line.Fb,
+                Amount = line.Amount
+            });
+        }
+
+        Advance = Convert.ToDouble(invoice.Advance);
+        RecalculateTotals();
     }
 
     private void ResetNewLine()

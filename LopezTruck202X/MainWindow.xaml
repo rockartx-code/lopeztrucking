@@ -20,6 +20,7 @@
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                 <TextBlock Text="Facturación - Lopez Trucking" FontSize="24" FontWeight="SemiBold" />
                 <Button Content="Catálogos" Click="OnOpenCatalogs" />
+                <Button Content="Buscar invoice" Click="OnOpenSearch" />
             </StackPanel>
 
             <Grid ColumnSpacing="16" RowSpacing="12">
@@ -333,4 +334,59 @@
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>
+
+    <ContentDialog
+        x:Name="SearchDialog"
+        Title="Buscar invoices"
+        PrimaryButtonText="Cerrar">
+        <ScrollViewer>
+            <StackPanel Spacing="16" Padding="0">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Filtros" FontSize="16" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="12" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CalendarDatePicker Grid.Column="0"
+                                            Date="{x:Bind ViewModel.SearchStartDate, Mode=TwoWay}"
+                                            PlaceholderText="Fecha inicio" />
+                        <CalendarDatePicker Grid.Column="1"
+                                            Date="{x:Bind ViewModel.SearchEndDate, Mode=TwoWay}"
+                                            PlaceholderText="Fecha fin" />
+                        <TextBox Grid.Column="2"
+                                 PlaceholderText="Cliente"
+                                 Text="{x:Bind ViewModel.SearchCustomerName, Mode=TwoWay}" />
+                        <Button Grid.Column="3" Content="Buscar" Click="OnSearchInvoices" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Resultados" FontSize="16" FontWeight="SemiBold" />
+                    <ListView ItemsSource="{x:Bind ViewModel.SearchResults, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.SelectedInvoiceSummary, Mode=TwoWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:InvoiceSummary">
+                                <Grid ColumnSpacing="12" Padding="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind Number}" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind DateDisplay}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind CustomerName}" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind TotalDisplay}" HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <Button Content="Cargar seleccionada" HorizontalAlignment="Left" Click="OnLoadSelectedInvoice" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </ContentDialog>
 </Window>
