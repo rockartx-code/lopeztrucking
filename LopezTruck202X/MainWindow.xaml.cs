@@ -56,8 +56,36 @@ public sealed partial class MainWindow : Window
 
     private async void OnSave(object sender, RoutedEventArgs e)
     {
+        if (await _repository.IsCustomerInactiveAsync(ViewModel.CustomerName))
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Root.XamlRoot,
+                Title = "Cliente eliminado",
+                Content = "Este cliente fue eliminado y no se puede usar de nuevo.",
+                CloseButtonText = "Cerrar"
+            };
+            await dialog.ShowAsync();
+            return;
+        }
+
         var invoice = ViewModel.ToInvoice();
-        await _repository.SaveInvoiceAsync(invoice);
+        try
+        {
+            await _repository.SaveInvoiceAsync(invoice);
+        }
+        catch (InvalidOperationException)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Root.XamlRoot,
+                Title = "Cliente eliminado",
+                Content = "Este cliente fue eliminado y no se puede usar de nuevo.",
+                CloseButtonText = "Cerrar"
+            };
+            await dialog.ShowAsync();
+            return;
+        }
         await LoadCustomersAsync();
     }
 
@@ -192,6 +220,31 @@ public sealed partial class MainWindow : Window
             await _repository.DeleteCompanyAsync(company.Id);
             await LoadCatalogsAsync();
         }
+    }
+
+    private async void OnDeleteCustomer(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: Customer customer })
+        {
+            return;
+        }
+
+        var deleted = await _repository.DeleteCustomerAsync(customer.Id);
+        if (!deleted)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Root.XamlRoot,
+                Title = "No se puede eliminar",
+                Content = "El cliente ya estaba eliminado o no existe.",
+                CloseButtonText = "Cerrar"
+            };
+            await dialog.ShowAsync();
+            return;
+        }
+
+        ViewModel.ClearCustomerSelection();
+        await LoadCustomersAsync();
     }
 
     private async Task LoadCatalogsAsync()

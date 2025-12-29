@@ -29,7 +29,8 @@ public sealed class SqliteInvoiceRepository
                 Address TEXT,
                 City TEXT,
                 State TEXT,
-                Phone TEXT
+                Phone TEXT,
+                IsActive INTEGER NOT NULL DEFAULT 1
             );
 
             CREATE TABLE IF NOT EXISTS Invoices (
@@ -85,6 +86,8 @@ public sealed class SqliteInvoiceRepository
             );
             """;
         await command.ExecuteNonQueryAsync();
+
+        await EnsureCustomerIsActiveColumnAsync(connection);
     }
 
     public async Task<int> GetNextInvoiceNumberAsync()
@@ -169,6 +172,7 @@ public sealed class SqliteInvoiceRepository
         command.CommandText = """
             SELECT Id, Name, Address, City, State, Phone
             FROM Customers
+            WHERE IsActive = 1
             ORDER BY Name;
             """;
         await using var reader = await command.ExecuteReaderAsync();
@@ -275,6 +279,11 @@ public sealed class SqliteInvoiceRepository
         await using var connection = _database.CreateConnection();
         await connection.OpenAsync();
 
+        if (await IsCustomerInactiveAsync(connection, invoice.Customer.Name))
+        {
+            throw new InvalidOperationException("Customer is inactive.");
+        }
+
         await using var transaction = await connection.BeginTransactionAsync();
 
         var customerId = await UpsertCustomerAsync(connection, invoice.Customer);
@@ -314,7 +323,7 @@ public sealed class SqliteInvoiceRepository
     private static async Task<int> UpsertCustomerAsync(SqliteConnection connection, Customer customer)
     {
         var selectCommand = connection.CreateCommand();
-        selectCommand.CommandText = "SELECT Id FROM Customers WHERE Name = $name";
+        selectCommand.CommandText = "SELECT Id FROM Customers WHERE Name = $name AND IsActive = 1";
         selectCommand.Parameters.AddWithValue("$name", customer.Name);
         var existingId = await selectCommand.ExecuteScalarAsync();
 
@@ -575,6 +584,69 @@ public sealed class SqliteInvoiceRepository
             """;
         command.Parameters.AddWithValue("$id", companyId);
         await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> DeleteCustomerAsync(int customerId)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Customers
+            SET IsActive = 0
+            WHERE Id = $id
+              AND IsActive = 1;
+            """;
+        command.Parameters.AddWithValue("$id", customerId);
+        var deleted = await command.ExecuteNonQueryAsync();
+        return deleted > 0;
+    }
+
+    public async Task<bool> IsCustomerInactiveAsync(string name)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+        return await IsCustomerInactiveAsync(connection, name);
+    }
+
+    private static async Task<bool> IsCustomerInactiveAsync(SqliteConnection connection, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT IsActive FROM Customers WHERE Name = $name;";
+        command.Parameters.AddWithValue("$name", name.Trim());
+        var result = await command.ExecuteScalarAsync();
+        return result is not null && Convert.ToInt32(result) == 0;
+    }
+
+    private static async Task EnsureCustomerIsActiveColumnAsync(SqliteConnection connection)
+    {
+        var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(Customers);";
+        await using var reader = await command.ExecuteReaderAsync();
+        var hasIsActive = false;
+        while (await reader.ReadAsync())
+        {
+            if (string.Equals(reader.GetString(1), "IsActive", StringComparison.OrdinalIgnoreCase))
+            {
+                hasIsActive = true;
+                break;
+            }
+        }
+
+        if (hasIsActive)
+        {
+            return;
+        }
+
+        var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE Customers ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;";
+        await alterCommand.ExecuteNonQueryAsync();
     }
 
     public async Task<double?> GetPriceAmountAsync(int companyId, int originId, int destinationId)
