@@ -161,9 +161,9 @@ public sealed class AccessImportService
     private static async Task ImportPricesAsync(
         OleDbConnection access,
         SqliteConnection sqlite,
-        IReadOnlyDictionary<string, int> companies,
-        IReadOnlyDictionary<string, int> origins,
-        IReadOnlyDictionary<string, int> destinations)
+        IDictionary<string, int> companies,
+        IDictionary<string, int> origins,
+        IDictionary<string, int> destinations)
     {
         using var command = access.CreateCommand();
         command.CommandText = "SELECT [Company], [From], [To], [Amount] FROM Precios";
