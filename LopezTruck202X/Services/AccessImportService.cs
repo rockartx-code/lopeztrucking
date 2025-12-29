@@ -171,23 +171,13 @@ public sealed class AccessImportService
 
         while (reader?.Read() == true)
         {
-            var company = ReadString(reader, 0);
-            var origin = ReadString(reader, 1);
-            var destination = ReadString(reader, 2);
+            var company = NormalizeName(ReadString(reader, 0));
+            var origin = NormalizeName(ReadString(reader, 1));
+            var destination = NormalizeName(ReadString(reader, 2));
 
-            if (string.IsNullOrWhiteSpace(company)
-                || string.IsNullOrWhiteSpace(origin)
-                || string.IsNullOrWhiteSpace(destination))
-            {
-                continue;
-            }
-
-            if (!companies.TryGetValue(company, out var companyId)
-                || !origins.TryGetValue(origin, out var originId)
-                || !destinations.TryGetValue(destination, out var destinationId))
-            {
-                continue;
-            }
+            var companyId = await EnsureNameAsync(sqlite, companies, "Companies", company);
+            var originId = await EnsureNameAsync(sqlite, origins, "Origins", origin);
+            var destinationId = await EnsureNameAsync(sqlite, destinations, "Destinations", destination);
 
             var amount = ReadDouble(reader, 3);
             var insert = sqlite.CreateCommand();
@@ -317,6 +307,35 @@ public sealed class AccessImportService
         var id = Convert.ToInt32(newId, CultureInfo.InvariantCulture);
         lookup[normalizedName] = id;
         return id;
+    }
+
+    private static async Task<int> EnsureNameAsync(
+        SqliteConnection connection,
+        IDictionary<string, int> lookup,
+        string table,
+        string name)
+    {
+        if (lookup.TryGetValue(name, out var existingId))
+        {
+            return existingId;
+        }
+
+        var insert = connection.CreateCommand();
+        insert.CommandText = $"""
+            INSERT OR IGNORE INTO {table} (Name)
+            VALUES ($name);
+            SELECT Id FROM {table} WHERE Name = $name;
+            """;
+        insert.Parameters.AddWithValue("$name", name);
+        var newId = await insert.ExecuteScalarAsync();
+        var id = Convert.ToInt32(newId, CultureInfo.InvariantCulture);
+        lookup[name] = id;
+        return id;
+    }
+
+    private static string NormalizeName(string? name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim();
     }
 
     private static string? ReadString(OleDbDataReader reader, int index)
