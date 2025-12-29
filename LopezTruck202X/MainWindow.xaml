@@ -298,24 +298,30 @@
                         <ColumnDefinition Width="120" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0"
-                              PlaceholderText="Compañía"
-                              ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}"
-                              DisplayMemberPath="Name"
-                              SelectedValuePath="Id"
-                              SelectedValue="{x:Bind ViewModel.NewPriceCompanyId, Mode=TwoWay}" />
-                    <ComboBox Grid.Column="1"
-                              PlaceholderText="Origen"
-                              ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}"
-                              DisplayMemberPath="Name"
-                              SelectedValuePath="Id"
-                              SelectedValue="{x:Bind ViewModel.NewPriceOriginId, Mode=TwoWay}" />
-                    <ComboBox Grid.Column="2"
-                              PlaceholderText="Destino"
-                              ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}"
-                              DisplayMemberPath="Name"
-                              SelectedValuePath="Id"
-                              SelectedValue="{x:Bind ViewModel.NewPriceDestinationId, Mode=TwoWay}" />
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Compañías" />
+                        <ListView x:Name="PriceCompaniesList"
+                                  Height="120"
+                                  ItemsSource="{x:Bind ViewModel.Companies, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectionMode="Multiple" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Orígenes" />
+                        <ListView x:Name="PriceOriginsList"
+                                  Height="120"
+                                  ItemsSource="{x:Bind ViewModel.Origins, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectionMode="Multiple" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Destinos" />
+                        <ListView x:Name="PriceDestinationsList"
+                                  Height="120"
+                                  ItemsSource="{x:Bind ViewModel.Destinations, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  SelectionMode="Multiple" />
+                    </StackPanel>
                     <NumberBox Grid.Column="3" Value="{x:Bind ViewModel.NewPriceAmount, Mode=TwoWay}" />
                     <Button Grid.Column="4" Content="Guardar" Click="OnAddPrice" />
                 </Grid>

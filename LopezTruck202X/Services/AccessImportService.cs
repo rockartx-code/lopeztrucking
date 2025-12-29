@@ -171,25 +171,48 @@ public sealed class AccessImportService
 
         while (reader?.Read() == true)
         {
-            var company = NormalizeName(ReadString(reader, 0));
-            var origin = NormalizeName(ReadString(reader, 1));
-            var destination = NormalizeName(ReadString(reader, 2));
-
-            var companyId = await EnsureNameAsync(sqlite, companies, "Companies", company);
-            var originId = await EnsureNameAsync(sqlite, origins, "Origins", origin);
-            var destinationId = await EnsureNameAsync(sqlite, destinations, "Destinations", destination);
-
             var amount = ReadDouble(reader, 3);
-            var insert = sqlite.CreateCommand();
-            insert.CommandText = """
-                INSERT OR REPLACE INTO Prices (CompanyId, OriginId, DestinationId, Amount)
-                VALUES ($companyId, $originId, $destinationId, $amount);
-                """;
-            insert.Parameters.AddWithValue("$companyId", companyId);
-            insert.Parameters.AddWithValue("$originId", originId);
-            insert.Parameters.AddWithValue("$destinationId", destinationId);
-            insert.Parameters.AddWithValue("$amount", amount);
-            await insert.ExecuteNonQueryAsync();
+            var companyNames = ParseNameList(ReadString(reader, 0));
+            var originNames = ParseNameList(ReadString(reader, 1));
+            var destinationNames = ParseNameList(ReadString(reader, 2));
+
+            var companyIds = new List<int>();
+            foreach (var company in companyNames)
+            {
+                companyIds.Add(await EnsureNameAsync(sqlite, companies, "Companies", company));
+            }
+
+            var originIds = new List<int>();
+            foreach (var origin in originNames)
+            {
+                originIds.Add(await EnsureNameAsync(sqlite, origins, "Origins", origin));
+            }
+
+            var destinationIds = new List<int>();
+            foreach (var destination in destinationNames)
+            {
+                destinationIds.Add(await EnsureNameAsync(sqlite, destinations, "Destinations", destination));
+            }
+
+            foreach (var companyId in companyIds)
+            {
+                foreach (var originId in originIds)
+                {
+                    foreach (var destinationId in destinationIds)
+                    {
+                        var insert = sqlite.CreateCommand();
+                        insert.CommandText = """
+                            INSERT OR REPLACE INTO Prices (CompanyId, OriginId, DestinationId, Amount)
+                            VALUES ($companyId, $originId, $destinationId, $amount);
+                            """;
+                        insert.Parameters.AddWithValue("$companyId", companyId);
+                        insert.Parameters.AddWithValue("$originId", originId);
+                        insert.Parameters.AddWithValue("$destinationId", destinationId);
+                        insert.Parameters.AddWithValue("$amount", amount);
+                        await insert.ExecuteNonQueryAsync();
+                    }
+                }
+            }
         }
     }
 
@@ -336,6 +359,26 @@ public sealed class AccessImportService
     private static string NormalizeName(string? name)
     {
         return string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim();
+    }
+
+    private static IReadOnlyList<string> ParseNameList(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new[] { string.Empty };
+        }
+
+        var results = new List<string>();
+        foreach (var part in raw.Split(','))
+        {
+            var normalized = NormalizeName(part);
+            if (!string.IsNullOrEmpty(normalized))
+            {
+                results.Add(normalized);
+            }
+        }
+
+        return results.Count == 0 ? new[] { string.Empty } : results;
     }
 
     private static string? ReadString(OleDbDataReader reader, int index)
