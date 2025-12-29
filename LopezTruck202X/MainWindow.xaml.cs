@@ -92,6 +92,14 @@ public sealed partial class MainWindow : Window
     private async void OnGeneratePdf(object sender, RoutedEventArgs e)
     {
         var invoice = ViewModel.ToInvoice();
+        InvoiceSummaryDialog.XamlRoot = Root.XamlRoot;
+        InvoiceSummaryDialog.DataContext = invoice;
+        var result = await InvoiceSummaryDialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
         var outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         await _pdfService.GenerateAsync(invoice, outputDirectory);
     }

@@ -399,4 +399,100 @@
             </StackPanel>
         </ScrollViewer>
     </ContentDialog>
+
+    <ContentDialog
+        x:Name="InvoiceSummaryDialog"
+        Title="Resumen de invoice"
+        PrimaryButtonText="Generar PDF"
+        CloseButtonText="Cancelar">
+        <ScrollViewer>
+            <StackPanel Spacing="16" Padding="0">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Encabezado" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="16" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Invoice No." />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Number}" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Date, StringFormat='{}{0:MM/dd/yyyy}'}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Check" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CheckNumber}" />
+                    </Grid>
+                    <Grid ColumnSpacing="16" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Cliente" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Customer.Name}" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Teléfono" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Customer.Phone}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Dirección" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Customer.Address}" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Líneas" FontWeight="SemiBold" />
+                    <ListView ItemsSource="{Binding Lines}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:InvoiceLine">
+                                <Grid ColumnSpacing="8" Padding="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="{x:Bind DateDisplay}" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind Company}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind From}" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind To}" />
+                                    <TextBlock Grid.Column="4" Text="{x:Bind Dispatch}" />
+                                    <TextBlock Grid.Column="5" Text="{x:Bind Empties}" />
+                                    <TextBlock Grid.Column="6" Text="{x:Bind Fb}" />
+                                    <TextBlock Grid.Column="7" Text="{x:Bind AmountDisplay}" HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Advance, StringFormat='Advance: {0:C}'}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Subtotal, StringFormat='Subtotal: {0:C}'}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Total, StringFormat='Total: {0:C}'}" FontWeight="SemiBold" />
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </ContentDialog>
 </Window>
