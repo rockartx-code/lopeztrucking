@@ -71,6 +71,17 @@ public sealed class SqliteInvoiceRepository
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Name TEXT NOT NULL UNIQUE
             );
+
+            CREATE TABLE IF NOT EXISTS Prices (
+                CompanyId INTEGER NOT NULL,
+                OriginId INTEGER NOT NULL,
+                DestinationId INTEGER NOT NULL,
+                Amount REAL NOT NULL,
+                PRIMARY KEY (CompanyId, OriginId, DestinationId),
+                FOREIGN KEY(CompanyId) REFERENCES Companies(Id),
+                FOREIGN KEY(OriginId) REFERENCES Origins(Id),
+                FOREIGN KEY(DestinationId) REFERENCES Destinations(Id)
+            );
             """;
         await command.ExecuteNonQueryAsync();
     }
@@ -390,6 +401,103 @@ public sealed class SqliteInvoiceRepository
             WHERE Id = $id;
             """;
         command.Parameters.AddWithValue("$id", companyId);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<double?> GetPriceAmountAsync(int companyId, int originId, int destinationId)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Amount
+            FROM Prices
+            WHERE CompanyId = $companyId
+              AND OriginId = $originId
+              AND DestinationId = $destinationId;
+            """;
+        command.Parameters.AddWithValue("$companyId", companyId);
+        command.Parameters.AddWithValue("$originId", originId);
+        command.Parameters.AddWithValue("$destinationId", destinationId);
+        var result = await command.ExecuteScalarAsync();
+        return result is null ? null : Convert.ToDouble(result);
+    }
+
+    public async Task<IReadOnlyList<Price>> GetPricesAsync()
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Prices.CompanyId,
+                   Prices.OriginId,
+                   Prices.DestinationId,
+                   Prices.Amount,
+                   Companies.Name,
+                   Origins.Name,
+                   Destinations.Name
+            FROM Prices
+            JOIN Companies ON Companies.Id = Prices.CompanyId
+            JOIN Origins ON Origins.Id = Prices.OriginId
+            JOIN Destinations ON Destinations.Id = Prices.DestinationId
+            ORDER BY Companies.Name, Origins.Name, Destinations.Name;
+            """;
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var results = new List<Price>();
+        while (await reader.ReadAsync())
+        {
+            results.Add(new Price
+            {
+                CompanyId = reader.GetInt32(0),
+                OriginId = reader.GetInt32(1),
+                DestinationId = reader.GetInt32(2),
+                Amount = reader.GetDouble(3),
+                CompanyName = reader.GetString(4),
+                OriginName = reader.GetString(5),
+                DestinationName = reader.GetString(6)
+            });
+        }
+
+        return results;
+    }
+
+    public async Task UpsertPriceAsync(Price price)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Prices (CompanyId, OriginId, DestinationId, Amount)
+            VALUES ($companyId, $originId, $destinationId, $amount)
+            ON CONFLICT(CompanyId, OriginId, DestinationId)
+            DO UPDATE SET Amount = excluded.Amount;
+            """;
+        command.Parameters.AddWithValue("$companyId", price.CompanyId);
+        command.Parameters.AddWithValue("$originId", price.OriginId);
+        command.Parameters.AddWithValue("$destinationId", price.DestinationId);
+        command.Parameters.AddWithValue("$amount", price.Amount);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task DeletePriceAsync(int companyId, int originId, int destinationId)
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM Prices
+            WHERE CompanyId = $companyId
+              AND OriginId = $originId
+              AND DestinationId = $destinationId;
+            """;
+        command.Parameters.AddWithValue("$companyId", companyId);
+        command.Parameters.AddWithValue("$originId", originId);
+        command.Parameters.AddWithValue("$destinationId", destinationId);
         await command.ExecuteNonQueryAsync();
     }
 }

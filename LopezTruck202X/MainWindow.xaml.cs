@@ -192,8 +192,66 @@ public sealed partial class MainWindow : Window
         var origins = await _repository.GetOriginsAsync();
         var destinations = await _repository.GetDestinationsAsync();
         var companies = await _repository.GetCompaniesAsync();
+        var prices = await _repository.GetPricesAsync();
         ViewModel.SetOrigins(origins);
         ViewModel.SetDestinations(destinations);
         ViewModel.SetCompanies(companies);
+        ViewModel.SetPrices(prices);
+    }
+
+    private async void OnLinePriceSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        await UpdateLinePriceAsync();
+    }
+
+    private async Task UpdateLinePriceAsync()
+    {
+        if (!ViewModel.TryGetSelectedRouteIds(out var companyId, out var originId, out var destinationId))
+        {
+            return;
+        }
+
+        var amount = await _repository.GetPriceAmountAsync(companyId, originId, destinationId);
+        ViewModel.NewLineAmount = amount ?? 0d;
+    }
+
+    private async void OnAddPrice(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.NewPriceCompanyId is null
+            || ViewModel.NewPriceOriginId is null
+            || ViewModel.NewPriceDestinationId is null)
+        {
+            return;
+        }
+
+        var price = new Price
+        {
+            CompanyId = ViewModel.NewPriceCompanyId.Value,
+            OriginId = ViewModel.NewPriceOriginId.Value,
+            DestinationId = ViewModel.NewPriceDestinationId.Value,
+            Amount = ViewModel.NewPriceAmount
+        };
+
+        await _repository.UpsertPriceAsync(price);
+        ViewModel.ResetNewPrice();
+        await LoadCatalogsAsync();
+    }
+
+    private async void OnUpdatePrice(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: Price price })
+        {
+            await _repository.UpsertPriceAsync(price);
+            await LoadCatalogsAsync();
+        }
+    }
+
+    private async void OnDeletePrice(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: Price price })
+        {
+            await _repository.DeletePriceAsync(price.CompanyId, price.OriginId, price.DestinationId);
+            await LoadCatalogsAsync();
+        }
     }
 }
