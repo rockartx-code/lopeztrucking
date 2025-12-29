@@ -51,7 +51,11 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
                     <TextBlock Text="Cliente" />
-                    <TextBox Text="{x:Bind ViewModel.CustomerName, Mode=TwoWay}" />
+                    <ComboBox IsEditable="True"
+                              ItemsSource="{x:Bind ViewModel.Customers, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              SelectedItem="{x:Bind ViewModel.SelectedCustomer, Mode=TwoWay}"
+                              Text="{x:Bind ViewModel.CustomerName, Mode=TwoWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">

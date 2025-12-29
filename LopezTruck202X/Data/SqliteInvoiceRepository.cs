@@ -160,6 +160,36 @@ public sealed class SqliteInvoiceRepository
         return results;
     }
 
+    public async Task<IReadOnlyList<Customer>> GetCustomersAsync()
+    {
+        await using var connection = _database.CreateConnection();
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, Name, Address, City, State, Phone
+            FROM Customers
+            ORDER BY Name;
+            """;
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var results = new List<Customer>();
+        while (await reader.ReadAsync())
+        {
+            results.Add(new Customer
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1),
+                Address = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                City = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                State = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                Phone = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
+            });
+        }
+
+        return results;
+    }
+
     public async Task<Invoice?> GetInvoiceAsync(int invoiceId)
     {
         await using var connection = _database.CreateConnection();
