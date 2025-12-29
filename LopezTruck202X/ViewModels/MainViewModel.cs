@@ -37,9 +37,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _newOriginName = string.Empty;
     private string _newDestinationName = string.Empty;
     private string _newCompanyName = string.Empty;
-    private int? _newPriceCompanyId;
-    private int? _newPriceOriginId;
-    private int? _newPriceDestinationId;
     private double _newPriceAmount;
     private DateTimeOffset? _searchStartDate;
     private DateTimeOffset? _searchEndDate;
@@ -240,24 +237,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _newCompanyName, value);
     }
 
-    public int? NewPriceCompanyId
-    {
-        get => _newPriceCompanyId;
-        set => SetField(ref _newPriceCompanyId, value);
-    }
-
-    public int? NewPriceOriginId
-    {
-        get => _newPriceOriginId;
-        set => SetField(ref _newPriceOriginId, value);
-    }
-
-    public int? NewPriceDestinationId
-    {
-        get => _newPriceDestinationId;
-        set => SetField(ref _newPriceDestinationId, value);
-    }
-
     public double NewPriceAmount
     {
         get => _newPriceAmount;
@@ -420,9 +399,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void ResetNewPrice()
     {
-        NewPriceCompanyId = null;
-        NewPriceOriginId = null;
-        NewPriceDestinationId = null;
         NewPriceAmount = 0d;
     }
 

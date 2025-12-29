@@ -382,22 +382,37 @@ public sealed partial class MainWindow : Window
 
     private async void OnAddPrice(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NewPriceCompanyId is null
-            || ViewModel.NewPriceOriginId is null
-            || ViewModel.NewPriceDestinationId is null)
+        var companies = PriceCompaniesList.SelectedItems.OfType<Company>().ToList();
+        var origins = PriceOriginsList.SelectedItems.OfType<Origin>().ToList();
+        var destinations = PriceDestinationsList.SelectedItems.OfType<Destination>().ToList();
+
+        if (companies.Count == 0 || origins.Count == 0 || destinations.Count == 0)
         {
             return;
         }
 
-        var price = new Price
+        foreach (var company in companies)
         {
-            CompanyId = ViewModel.NewPriceCompanyId.Value,
-            OriginId = ViewModel.NewPriceOriginId.Value,
-            DestinationId = ViewModel.NewPriceDestinationId.Value,
-            Amount = ViewModel.NewPriceAmount
-        };
+            foreach (var origin in origins)
+            {
+                foreach (var destination in destinations)
+                {
+                    var price = new Price
+                    {
+                        CompanyId = company.Id,
+                        OriginId = origin.Id,
+                        DestinationId = destination.Id,
+                        Amount = ViewModel.NewPriceAmount
+                    };
 
-        await _repository.UpsertPriceAsync(price);
+                    await _repository.UpsertPriceAsync(price);
+                }
+            }
+        }
+
+        PriceCompaniesList.SelectedItems.Clear();
+        PriceOriginsList.SelectedItems.Clear();
+        PriceDestinationsList.SelectedItems.Clear();
         ViewModel.ResetNewPrice();
         await LoadCatalogsAsync();
     }
