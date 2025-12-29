@@ -9,12 +9,15 @@ using LopezTruck202X.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 
 namespace LopezTruck202X;
 
 public sealed partial class MainWindow : Window
 {
     private readonly SqliteInvoiceRepository _repository;
+    private readonly AccessImportService _accessImportService;
     private readonly InvoicePdfService _pdfService = new();
     private XamlRoot? DialogXamlRoot => (Content as FrameworkElement)?.XamlRoot;
 
@@ -26,6 +29,7 @@ public sealed partial class MainWindow : Window
         var databasePath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "lopeztrucking.db");
         var database = new SqliteDatabase(databasePath);
         _repository = new SqliteInvoiceRepository(database);
+        _accessImportService = new AccessImportService(database);
 
         if (Content is FrameworkElement root)
         {
@@ -115,6 +119,64 @@ public sealed partial class MainWindow : Window
     {
         SearchDialog.XamlRoot = DialogXamlRoot;
         await SearchDialog.ShowAsync();
+    }
+
+    private async void OnImportAccess(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileOpenPicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+        };
+        picker.FileTypeFilter.Add(".accdb");
+        picker.FileTypeFilter.Add(".mdb");
+        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+        var file = await picker.PickSingleFileAsync();
+        if (file is null)
+        {
+            return;
+        }
+
+        var confirmDialog = new ContentDialog
+        {
+            XamlRoot = DialogXamlRoot,
+            Title = "Importar Access",
+            Content = "Esta acción reemplazará los datos actuales en SQLite. ¿Deseas continuar?",
+            PrimaryButtonText = "Importar",
+            CloseButtonText = "Cancelar"
+        };
+
+        if (await confirmDialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await _accessImportService.ImportAsync(file.Path);
+            await LoadCatalogsAsync();
+            ViewModel.InvoiceNumber = await _repository.GetNextInvoiceNumberAsync();
+
+            var successDialog = new ContentDialog
+            {
+                XamlRoot = DialogXamlRoot,
+                Title = "Importación completa",
+                Content = "La información de Access fue importada correctamente.",
+                CloseButtonText = "Cerrar"
+            };
+            await successDialog.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ContentDialog
+            {
+                XamlRoot = DialogXamlRoot,
+                Title = "Error al importar",
+                Content = $"No se pudo importar el archivo de Access. Detalle: {ex.Message}",
+                CloseButtonText = "Cerrar"
+            };
+            await errorDialog.ShowAsync();
+        }
     }
 
     private async void OnAddOrigin(object sender, RoutedEventArgs e)
