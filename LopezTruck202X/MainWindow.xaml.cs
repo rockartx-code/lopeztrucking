@@ -16,6 +16,7 @@ public sealed partial class MainWindow : Window
 {
     private readonly SqliteInvoiceRepository _repository;
     private readonly InvoicePdfService _pdfService = new();
+    private XamlRoot? DialogXamlRoot => (Content as FrameworkElement)?.XamlRoot;
 
     public MainWindow()
     {
@@ -60,7 +61,7 @@ public sealed partial class MainWindow : Window
         {
             var dialog = new ContentDialog
             {
-                XamlRoot = Root.XamlRoot,
+                XamlRoot = DialogXamlRoot,
                 Title = "Cliente eliminado",
                 Content = "Este cliente fue eliminado y no se puede usar de nuevo.",
                 CloseButtonText = "Cerrar"
@@ -78,7 +79,7 @@ public sealed partial class MainWindow : Window
         {
             var dialog = new ContentDialog
             {
-                XamlRoot = Root.XamlRoot,
+                XamlRoot = DialogXamlRoot,
                 Title = "Cliente eliminado",
                 Content = "Este cliente fue eliminado y no se puede usar de nuevo.",
                 CloseButtonText = "Cerrar"
@@ -92,7 +93,7 @@ public sealed partial class MainWindow : Window
     private async void OnGeneratePdf(object sender, RoutedEventArgs e)
     {
         var invoice = ViewModel.ToInvoice();
-        InvoiceSummaryDialog.XamlRoot = Root.XamlRoot;
+        InvoiceSummaryDialog.XamlRoot = DialogXamlRoot;
         InvoiceSummaryDialog.DataContext = invoice;
         var result = await InvoiceSummaryDialog.ShowAsync();
         if (result != ContentDialogResult.Primary)
@@ -106,13 +107,13 @@ public sealed partial class MainWindow : Window
 
     private async void OnOpenCatalogs(object sender, RoutedEventArgs e)
     {
-        CatalogDialog.XamlRoot = Root.XamlRoot;
+        CatalogDialog.XamlRoot = DialogXamlRoot;
         await CatalogDialog.ShowAsync();
     }
 
     private async void OnOpenSearch(object sender, RoutedEventArgs e)
     {
-        SearchDialog.XamlRoot = Root.XamlRoot;
+        SearchDialog.XamlRoot = DialogXamlRoot;
         await SearchDialog.ShowAsync();
     }
 
@@ -242,7 +243,7 @@ public sealed partial class MainWindow : Window
         {
             var dialog = new ContentDialog
             {
-                XamlRoot = Root.XamlRoot,
+                XamlRoot = DialogXamlRoot,
                 Title = "No se puede eliminar",
                 Content = "El cliente ya estaba eliminado o no existe.",
                 CloseButtonText = "Cerrar"
