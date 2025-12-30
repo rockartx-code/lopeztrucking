@@ -16,14 +16,15 @@ public sealed class PriceAgreementRepository : IPriceAgreementRepository
 
     public Task<PriceAgreement?> FindByMixAsync(
         Guid companyId,
-        string mixName,
+        string fingerprintHash,
         DateOnly asOfDate,
         CancellationToken cancellationToken = default)
     {
         return _dbContext.PriceAgreements
             .Include(agreement => agreement.Items)
             .Where(agreement => agreement.CompanyId == companyId)
-            .Where(agreement => agreement.MixName == mixName)
+            .Where(agreement => agreement.FingerprintHash == fingerprintHash)
+            .Where(agreement => agreement.IsActive)
             .Where(agreement => agreement.EffectiveDate <= asOfDate)
             .OrderByDescending(agreement => agreement.EffectiveDate)
             .FirstOrDefaultAsync(cancellationToken);

@@ -137,9 +137,21 @@ public partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
             b.Property<Guid>("CompanyId")
                 .HasColumnType("TEXT");
 
+            b.Property<string>("FingerprintHash")
+                .IsRequired()
+                .HasColumnType("TEXT");
+
+            b.Property<string>("FingerprintText")
+                .IsRequired()
+                .HasColumnType("TEXT");
+
             b.Property<DateOnly>("EffectiveDate")
                 .HasColumnType("TEXT")
                 .HasConversion(dateOnlyConverter);
+
+            b.Property<bool>("IsActive")
+                .HasColumnType("INTEGER")
+                .HasDefaultValue(true);
 
             b.Property<string>("MixName")
                 .IsRequired()
