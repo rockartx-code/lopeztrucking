@@ -8,4 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="..\InvoiceApp.Domain\InvoiceApp.Domain.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+  </ItemGroup>
 </Project>
