@@ -9,6 +9,7 @@ public sealed class SavePriceAgreementFromMixValidator : AbstractValidator<SaveP
     {
         RuleFor(command => command.CompanyId).NotEmpty();
         RuleFor(command => command.MixName).NotEmpty();
+        RuleFor(command => command.MixIds).NotEmpty();
         RuleFor(command => command.EffectiveDate).NotEqual(default(DateOnly));
         RuleFor(command => command.EmptyUnitPrice).GreaterThanOrEqualTo(0m);
         RuleFor(command => command.BaseRate).GreaterThanOrEqualTo(0m);

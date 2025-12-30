@@ -84,7 +84,10 @@ public class InvoiceAppDbContext : DbContext
             entity.ToTable("PriceAgreements");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.MixName).IsRequired();
+            entity.Property(e => e.FingerprintText).IsRequired();
+            entity.Property(e => e.FingerprintHash).IsRequired();
             entity.Property(e => e.EffectiveDate).HasConversion(dateOnlyConverter);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.HasOne(e => e.Company)
                 .WithMany()
                 .HasForeignKey(e => e.CompanyId)
