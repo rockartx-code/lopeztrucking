@@ -1,4 +1,7 @@
 using System.Windows;
+using InvoiceApp.Application.UseCases.Commands;
+using InvoiceApp.Infrastructure;
+using InvoiceApp.Presentation.Desktop.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,6 +44,9 @@ public partial class App : Application
     private static void ConfigureServices(IConfiguration configuration, IServiceCollection services)
     {
         services.AddSingleton(configuration);
+        services.AddInfrastructure(configuration);
+        services.AddTransient<AddDetailGroupHandler>();
+        services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<MainWindow>();
     }
 }
