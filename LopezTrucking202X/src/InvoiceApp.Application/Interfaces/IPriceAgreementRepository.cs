@@ -6,7 +6,7 @@ public interface IPriceAgreementRepository
 {
     Task<PriceAgreement?> FindByMixAsync(
         Guid companyId,
-        string mixName,
+        string fingerprintHash,
         DateOnly asOfDate,
         CancellationToken cancellationToken = default);
 

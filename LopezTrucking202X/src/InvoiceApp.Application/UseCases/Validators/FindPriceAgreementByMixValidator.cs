@@ -8,7 +8,7 @@ public sealed class FindPriceAgreementByMixValidator : AbstractValidator<FindPri
     public FindPriceAgreementByMixValidator()
     {
         RuleFor(query => query.CompanyId).NotEmpty();
-        RuleFor(query => query.MixName).NotEmpty();
+        RuleFor(query => query.MixIds).NotEmpty();
         RuleFor(query => query.AsOfDate).NotEqual(default(DateOnly));
     }
 }
