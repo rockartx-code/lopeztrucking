@@ -1,0 +1,206 @@
+<UserControl x:Class="InvoiceApp.Presentation.Desktop.Views.InvoiceEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:InvoiceApp.Presentation.Desktop.ViewModels"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <viewModels:InvoiceEditorViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Subhauler" Margin="0 0 0 12">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Name" FontWeight="SemiBold" />
+                <ComboBox Grid.Column="1" Grid.ColumnSpan="2"
+                          ItemsSource="{Binding Subhaulers}"
+                          SelectedItem="{Binding SelectedSubhauler}"
+                          DisplayMemberPath="Display" />
+
+                <TextBlock Grid.Row="1" Text="Contact" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSubhauler.ContactName}" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedSubhauler.Phone}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="Invoice Meta" Margin="0 0 0 12">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Invoice No" FontWeight="SemiBold" />
+                <TextBox Grid.Row="1" Text="{Binding InvoiceNo, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 12 0" />
+
+                <TextBlock Grid.Column="1" Text="Date" FontWeight="SemiBold" />
+                <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding InvoiceDate}" Margin="0 4 12 0" />
+
+                <TextBlock Grid.Column="2" Text="Check No" FontWeight="SemiBold" />
+                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding CheckNo, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 0 0" />
+            </Grid>
+        </GroupBox>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Company / From / To" Grid.ColumnSpan="2" Margin="0 0 0 12">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Company" FontWeight="SemiBold" />
+                        <ListBox ItemsSource="{Binding Companies}" SelectionMode="Multiple" Margin="0 4 8 0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="From" FontWeight="SemiBold" />
+                        <ListBox ItemsSource="{Binding FromPlaces}" SelectionMode="Multiple" Margin="0 4 8 0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="To" FontWeight="SemiBold" />
+                        <ListBox ItemsSource="{Binding ToPlaces}" SelectionMode="Multiple" Margin="0 4 0 0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="1" Header="Capture" Margin="0 0 12 12">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Dispatch" FontWeight="SemiBold" />
+                    <TextBox Grid.Row="1" Text="{Binding Dispatch, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 12 0" />
+
+                    <TextBlock Grid.Row="2" Text="FB" FontWeight="SemiBold" />
+                    <TextBox Grid.Row="3" Text="{Binding Fb, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 12 0" />
+
+                    <TextBlock Grid.Row="4" Text="Date" FontWeight="SemiBold" />
+                    <DatePicker Grid.Row="5" SelectedDate="{Binding DetailDate}" Margin="0 4 12 0" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Empties" FontWeight="SemiBold" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Empties, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 0 0" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Amount Base" FontWeight="SemiBold" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AmountBase, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 0 0" />
+
+                    <StackPanel Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 12 0 0">
+                        <Button Content="{Binding AddButtonText}" Command="{Binding AddDetailGroupCommand}" Margin="0 0 8 0" Width="90" />
+                        <Button Content="Cancel" Command="{Binding CancelEditCommand}" Margin="0 0 8 0" Width="90" />
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="1" Grid.Column="1" Header="Actions" Margin="0 0 0 12">
+                <StackPanel Margin="8">
+                    <Button Content="Edit" Command="{Binding EditDetailGroupCommand}" Margin="0 0 0 8" />
+                    <Button Content="Delete" Command="{Binding DeleteDetailGroupCommand}" />
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="Detail Groups">
+                <DataGrid ItemsSource="{Binding DetailGroups}"
+                          SelectedItem="{Binding SelectedDetailGroup}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Company" Binding="{Binding Companies}" Width="2*" />
+                        <DataGridTextColumn Header="From" Binding="{Binding FromPlaces}" Width="2*" />
+                        <DataGridTextColumn Header="To" Binding="{Binding ToPlaces}" Width="2*" />
+                        <DataGridTextColumn Header="Amount Base" Binding="{Binding AmountBase, StringFormat=C}" Width="*" />
+                        <DataGridTextColumn Header="Empty Amount" Binding="{Binding EmptyAmount, StringFormat=C}" Width="*" />
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+
+        <GroupBox Grid.Row="3" Header="Totals" Margin="0 12 0 0">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Subtotal" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Text="{Binding Subtotal, StringFormat=C}" />
+
+                <TextBlock Grid.Column="1" Text="Advance" FontWeight="SemiBold" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Advance, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 12 0" />
+
+                <TextBlock Grid.Column="2" Text="Total" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Total, StringFormat=C}" />
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>
