@@ -9,4 +9,7 @@ public class Place
     public string City { get; set; } = string.Empty;
     public string State { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
+    public bool IsCompany { get; set; }
+    public bool IsFrom { get; set; }
+    public bool IsTo { get; set; }
 }
