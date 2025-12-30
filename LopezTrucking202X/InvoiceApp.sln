@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoiceApp.Domain", "src\\InvoiceApp.Domain\\InvoiceApp.Domain.csproj", "{EA2EC109-FF04-4AFB-AD53-CC159C856D74}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoiceApp.Application", "src\\InvoiceApp.Application\\InvoiceApp.Application.csproj", "{7DCA13E3-8B51-4B18-BA08-5410A859033D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoiceApp.Infrastructure", "src\\InvoiceApp.Infrastructure\\InvoiceApp.Infrastructure.csproj", "{139696EF-2733-4144-80AF-126D17E21AAE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoiceApp.Presentation.Desktop", "src\\InvoiceApp.Presentation.Desktop\\InvoiceApp.Presentation.Desktop.csproj", "{5E463010-D05B-49AD-80F1-7A97A85BE235}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoiceApp.Migrator", "tools\\InvoiceApp.Migrator\\InvoiceApp.Migrator.csproj", "{8EB13399-37BE-43DA-88A4-C6526EB0FEE9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA2EC109-FF04-4AFB-AD53-CC159C856D74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA2EC109-FF04-4AFB-AD53-CC159C856D74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA2EC109-FF04-4AFB-AD53-CC159C856D74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA2EC109-FF04-4AFB-AD53-CC159C856D74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DCA13E3-8B51-4B18-BA08-5410A859033D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DCA13E3-8B51-4B18-BA08-5410A859033D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DCA13E3-8B51-4B18-BA08-5410A859033D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DCA13E3-8B51-4B18-BA08-5410A859033D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{139696EF-2733-4144-80AF-126D17E21AAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{139696EF-2733-4144-80AF-126D17E21AAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{139696EF-2733-4144-80AF-126D17E21AAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{139696EF-2733-4144-80AF-126D17E21AAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E463010-D05B-49AD-80F1-7A97A85BE235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E463010-D05B-49AD-80F1-7A97A85BE235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E463010-D05B-49AD-80F1-7A97A85BE235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E463010-D05B-49AD-80F1-7A97A85BE235}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB13399-37BE-43DA-88A4-C6526EB0FEE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB13399-37BE-43DA-88A4-C6526EB0FEE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB13399-37BE-43DA-88A4-C6526EB0FEE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB13399-37BE-43DA-88A4-C6526EB0FEE9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
