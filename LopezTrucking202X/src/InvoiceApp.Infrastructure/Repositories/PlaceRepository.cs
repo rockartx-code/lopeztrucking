@@ -1,4 +1,5 @@
 using InvoiceApp.Application.Interfaces;
+using System;
 using InvoiceApp.Domain.Entities;
 using InvoiceApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,29 @@ public sealed class PlaceRepository : IPlaceRepository
     public PlaceRepository(InvoiceAppDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public async Task<IReadOnlyList<Place>> GetByCompanyIdsAsync(
+        IReadOnlyCollection<Guid> companyIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (companyIds.Count == 0)
+        {
+            return Array.Empty<Place>();
+        }
+
+        var places = await _dbContext.CompanyPlaces
+            .Where(link => companyIds.Contains(link.CompanyId))
+            .Select(link => link.Place)
+            .Where(place => place != null)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return places
+            .GroupBy(place => place!.Id)
+            .Select(group => group.First()!)
+            .OrderBy(place => place.Name)
+            .ToList();
     }
 
     public Task<Place?> GetByIdAsync(Guid placeId, CancellationToken cancellationToken = default)

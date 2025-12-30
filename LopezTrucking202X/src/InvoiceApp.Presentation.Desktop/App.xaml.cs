@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using InvoiceApp.Application.UseCases.Commands;
 using InvoiceApp.Infrastructure;
@@ -26,6 +27,8 @@ public partial class App : Application
             .Build();
     }
 
+    public IServiceProvider Services => _host.Services;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         _host.Start();
@@ -47,6 +50,7 @@ public partial class App : Application
         services.AddInfrastructure(configuration);
         services.AddTransient<AddDetailGroupHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
+        services.AddSingleton<InvoiceEditorViewModel>();
         services.AddSingleton<MainWindow>();
     }
 }

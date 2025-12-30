@@ -1,14 +1,20 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using InvoiceApp.Application.Interfaces;
 
 namespace InvoiceApp.Presentation.Desktop.ViewModels;
 
 public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 {
+    private readonly ICompanyRepository _companyRepository;
+    private readonly IPlaceRepository _placeRepository;
     private string _invoiceNo = string.Empty;
     private DateTime _invoiceDate = DateTime.Today;
     private string _checkNo = string.Empty;
@@ -24,39 +30,24 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     private decimal _subtotal;
     private decimal _total;
 
-    public InvoiceEditorViewModel()
+    public InvoiceEditorViewModel(ICompanyRepository companyRepository, IPlaceRepository placeRepository)
     {
+        _companyRepository = companyRepository;
+        _placeRepository = placeRepository;
         Subhaulers = new ObservableCollection<SubhaulerInfo>
         {
             new() { Name = "Lopez Trucking", ContactName = "R. Lopez", Phone = "(555) 123-4567" },
             new() { Name = "Hernandez Hauling", ContactName = "A. Hernandez", Phone = "(555) 987-6543" }
         };
 
-        Companies = new ObservableCollection<SelectableItem>
-        {
-            new("Acme Construction"),
-            new("Road Builders"),
-            new("Valley Concrete")
-        };
-
-        FromPlaces = new ObservableCollection<SelectableItem>
-        {
-            new("Main Yard"),
-            new("River Pit"),
-            new("Downtown Plant")
-        };
-
-        ToPlaces = new ObservableCollection<SelectableItem>
-        {
-            new("Site A"),
-            new("Site B"),
-            new("Warehouse C")
-        };
+        Companies = new ObservableCollection<SelectableItem>();
+        FromPlaces = new ObservableCollection<SelectableItem>();
+        ToPlaces = new ObservableCollection<SelectableItem>();
 
         DetailGroups = new ObservableCollection<DetailGroupViewModel>();
         DetailGroups.CollectionChanged += OnDetailGroupsChanged;
 
-        SubscribeToSelectionChanges(Companies, UpdateEntryCompanyDisplay);
+        SubscribeToSelectionChanges(Companies, UpdateEntryCompanyDisplay, () => _ = UpdatePlacesForCompaniesAsync());
         SubscribeToSelectionChanges(FromPlaces, UpdateEntryFromDisplay);
         SubscribeToSelectionChanges(ToPlaces, UpdateEntryToDisplay);
 
@@ -202,6 +193,16 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 
     public ICommand CancelEditCommand { get; }
 
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        var companies = await _companyRepository
+            .GetAllAsync(cancellationToken)
+            .ConfigureAwait(true);
+
+        ReplaceSelectableItems(Companies, companies.Select(company => (company.Id, company.Name)));
+        await UpdatePlacesForCompaniesAsync(cancellationToken).ConfigureAwait(true);
+    }
+
     private void AddOrUpdateDetailGroup()
     {
         if (IsEditing && SelectedDetailGroup is not null)
@@ -335,18 +336,38 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         Total = Subtotal - Advance;
     }
 
-    private void SubscribeToSelectionChanges(ObservableCollection<SelectableItem> items, Action updateDisplay)
+    private void SubscribeToSelectionChanges(
+        ObservableCollection<SelectableItem> items,
+        Action updateDisplay,
+        Action? selectionChanged = null)
     {
-        foreach (var item in items)
+        void AttachHandler(SelectableItem item)
         {
             item.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(SelectableItem.IsSelected))
                 {
                     updateDisplay();
+                    selectionChanged?.Invoke();
                 }
             };
         }
+
+        foreach (var item in items)
+        {
+            AttachHandler(item);
+        }
+
+        items.CollectionChanged += (_, args) =>
+        {
+            if (args.NewItems is not null)
+            {
+                foreach (SelectableItem item in args.NewItems)
+                {
+                    AttachHandler(item);
+                }
+            }
+        };
     }
 
     private void UpdateEntryCompanyDisplay()
@@ -368,6 +389,40 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         EntryToDisplay = string.Join(", ", ToPlaces.Where(item => item.IsSelected).Select(item => item.Name));
         OnPropertyChanged(nameof(EntryToDisplay));
         RaiseCommandStates();
+    }
+
+    private async Task UpdatePlacesForCompaniesAsync(CancellationToken cancellationToken = default)
+    {
+        var selectedCompanyIds = Companies
+            .Where(item => item.IsSelected)
+            .Select(item => item.Id)
+            .ToArray();
+
+        var places = await _placeRepository
+            .GetByCompanyIdsAsync(selectedCompanyIds, cancellationToken)
+            .ConfigureAwait(true);
+
+        ReplaceSelectableItems(FromPlaces, places.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
+        ReplaceSelectableItems(ToPlaces, places.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
+        UpdateEntryFromDisplay();
+        UpdateEntryToDisplay();
+    }
+
+    private static void ReplaceSelectableItems(
+        ObservableCollection<SelectableItem> items,
+        IEnumerable<(Guid Id, string Name)> values,
+        bool autoSelectSingle = false)
+    {
+        items.Clear();
+        foreach (var (id, name) in values)
+        {
+            items.Add(new SelectableItem(id, name));
+        }
+
+        if (autoSelectSingle && items.Count == 1)
+        {
+            items[0].IsSelected = true;
+        }
     }
 
     private static void SetSelectionsFromDisplay(ObservableCollection<SelectableItem> items, string display)
@@ -428,12 +483,15 @@ public sealed class SelectableItem : INotifyPropertyChanged
 {
     private bool _isSelected;
 
-    public SelectableItem(string name)
+    public SelectableItem(Guid id, string name)
     {
+        Id = id;
         Name = name;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public Guid Id { get; }
 
     public string Name { get; }
 
