@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
             options.UseSqlite(connectionString));
 
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IDetailGroupRepository, DetailGroupRepository>();
         services.AddScoped<IPriceAgreementRepository, PriceAgreementRepository>();
         services.AddScoped<IPlaceRepository, PlaceRepository>();
