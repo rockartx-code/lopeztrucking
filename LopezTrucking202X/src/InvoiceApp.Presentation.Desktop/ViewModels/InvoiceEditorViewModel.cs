@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using InvoiceApp.Application.Interfaces;
+using InvoiceApp.Application.UseCases.Commands;
 using InvoiceApp.Application.Models;
 using InvoiceApp.Application.UseCases;
 using InvoiceApp.Application.UseCases.Commands;
@@ -22,6 +23,9 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 {
     private readonly ICompanyRepository _companyRepository;
     private readonly IPlaceRepository _placeRepository;
+    private readonly ISubhaulerRepository _subhaulerRepository;
+    private readonly CreateOrUpdateSubhaulerHandler _createOrUpdateSubhaulerHandler;
+    private readonly DeleteSubhaulerHandler _deleteSubhaulerHandler;
     private readonly ISettingRepository _settingRepository;
     private readonly SavePriceAgreementFromMixHandler _savePriceAgreementFromMixHandler;
     private readonly FindPriceAgreementByMixHandler _findPriceAgreementByMixHandler;
@@ -29,6 +33,9 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     private DateTime _invoiceDate = DateTime.Today;
     private string _checkNo = string.Empty;
     private SubhaulerInfo? _selectedSubhauler;
+    private string _subhaulerName = string.Empty;
+    private string? _subhaulerContactName;
+    private string? _subhaulerPhone;
     private string _dispatch = string.Empty;
     private string _fb = string.Empty;
     private DateTime _detailDate = DateTime.Today;
@@ -48,6 +55,16 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     public InvoiceEditorViewModel(
         ICompanyRepository companyRepository,
         IPlaceRepository placeRepository,
+        ISubhaulerRepository subhaulerRepository,
+        CreateOrUpdateSubhaulerHandler createOrUpdateSubhaulerHandler,
+        DeleteSubhaulerHandler deleteSubhaulerHandler)
+    {
+        _companyRepository = companyRepository;
+        _placeRepository = placeRepository;
+        _subhaulerRepository = subhaulerRepository;
+        _createOrUpdateSubhaulerHandler = createOrUpdateSubhaulerHandler;
+        _deleteSubhaulerHandler = deleteSubhaulerHandler;
+        Subhaulers = new ObservableCollection<SubhaulerInfo>();
         ISettingRepository settingRepository,
         SavePriceAgreementFromMixHandler savePriceAgreementFromMixHandler,
          FindPriceAgreementByMixHandler findPriceAgreementByMixHandler)
@@ -78,6 +95,8 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         EditDetailGroupCommand = new RelayCommand(BeginEditDetailGroup, () => SelectedDetailGroup is not null);
         DeleteDetailGroupCommand = new RelayCommand(DeleteDetailGroup, () => SelectedDetailGroup is not null);
         CancelEditCommand = new RelayCommand(CancelEdit, () => IsEditing);
+        SaveSubhaulerCommand = new RelayCommand(() => _ = SaveSubhaulerAsync(), CanSaveSubhauler);
+        DeleteSubhaulerCommand = new RelayCommand(() => _ = DeleteSubhaulerAsync(), () => SelectedSubhauler is not null);
         SaveInvoiceCommand = new RelayCommand(() => _ = SaveInvoiceAsync(), CanSaveInvoice);
         UsePriceAgreementCommand = new RelayCommand(ApplySuggestedAmountBase, () => _suggestedBaseRate.HasValue);
 
@@ -97,6 +116,43 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         set
         {
             if (SetField(ref _selectedSubhauler, value))
+            {
+                UpdateSubhaulerEntry();
+                RaiseCommandStates();
+            }
+        }
+    }
+
+    public string SubhaulerName
+    {
+        get => _subhaulerName;
+        set
+        {
+            if (SetField(ref _subhaulerName, value))
+            {
+                RaiseCommandStates();
+            }
+        }
+    }
+
+    public string? SubhaulerContactName
+    {
+        get => _subhaulerContactName;
+        set
+        {
+            if (SetField(ref _subhaulerContactName, value))
+            {
+                RaiseCommandStates();
+            }
+        }
+    }
+
+    public string? SubhaulerPhone
+    {
+        get => _subhaulerPhone;
+        set
+        {
+            if (SetField(ref _subhaulerPhone, value))
             {
                 SuggestNextInvoiceNumber();
                 RaiseCommandStates();
@@ -241,11 +297,16 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 
     public ICommand CancelEditCommand { get; }
 
+    public ICommand SaveSubhaulerCommand { get; }
+
+    public ICommand DeleteSubhaulerCommand { get; }
     public ICommand SaveInvoiceCommand { get; }
     public ICommand UsePriceAgreementCommand { get; }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
+        await RefreshSubhaulersAsync(cancellationToken: cancellationToken).ConfigureAwait(true);
+
         var companies = await _companyRepository
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(true);
@@ -258,6 +319,86 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
             .ConfigureAwait(true);
 
         ReplaceSubhaulers(subhaulers);
+    }
+
+    private void UpdateSubhaulerEntry()
+    {
+        if (SelectedSubhauler is null)
+        {
+            SubhaulerName = string.Empty;
+            SubhaulerContactName = null;
+            SubhaulerPhone = null;
+            return;
+        }
+
+        SubhaulerName = SelectedSubhauler.Name;
+        SubhaulerContactName = SelectedSubhauler.ContactName;
+        SubhaulerPhone = SelectedSubhauler.Phone;
+    }
+
+    private async Task RefreshSubhaulersAsync(Guid? selectedId = null, CancellationToken cancellationToken = default)
+    {
+        var subhaulers = await _subhaulerRepository
+            .GetAllAsync(cancellationToken)
+            .ConfigureAwait(true);
+
+        var previousSelection = selectedId ?? SelectedSubhauler?.Id;
+        Subhaulers.Clear();
+        foreach (var subhauler in subhaulers)
+        {
+            Subhaulers.Add(new SubhaulerInfo
+            {
+                Id = subhauler.Id,
+                Name = subhauler.Name,
+                ContactName = subhauler.ContactName,
+                Phone = subhauler.Phone
+            });
+        }
+
+        SelectedSubhauler = previousSelection is null
+            ? null
+            : Subhaulers.FirstOrDefault(item => item.Id == previousSelection.Value);
+    }
+
+    private bool CanSaveSubhauler()
+    {
+        return !string.IsNullOrWhiteSpace(SubhaulerName);
+    }
+
+    private async Task SaveSubhaulerAsync()
+    {
+        if (!CanSaveSubhauler())
+        {
+            return;
+        }
+
+        var subhaulerId = SelectedSubhauler?.Id ?? Guid.NewGuid();
+        var command = new CreateOrUpdateSubhauler(
+            subhaulerId,
+            SubhaulerName.Trim(),
+            string.IsNullOrWhiteSpace(SubhaulerContactName) ? null : SubhaulerContactName.Trim(),
+            string.IsNullOrWhiteSpace(SubhaulerPhone) ? null : SubhaulerPhone.Trim());
+
+        var savedSubhauler = await _createOrUpdateSubhaulerHandler
+            .HandleAsync(command)
+            .ConfigureAwait(true);
+
+        await RefreshSubhaulersAsync(savedSubhauler.Id).ConfigureAwait(true);
+    }
+
+    private async Task DeleteSubhaulerAsync()
+    {
+        if (SelectedSubhauler is null)
+        {
+            return;
+        }
+
+        var removedId = SelectedSubhauler.Id;
+        await _deleteSubhaulerHandler
+            .HandleAsync(new DeleteSubhauler(removedId))
+            .ConfigureAwait(true);
+
+        await RefreshSubhaulersAsync().ConfigureAwait(true);
     }
 
     private async Task AddOrUpdateDetailGroupAsync()
@@ -549,6 +690,8 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         (EditDetailGroupCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (DeleteDetailGroupCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (CancelEditCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (SaveSubhaulerCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (DeleteSubhaulerCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (SaveInvoiceCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 

@@ -18,24 +18,43 @@
         <GroupBox Header="Subhauler" Margin="0 0 0 12">
             <Grid Margin="8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="Name" FontWeight="SemiBold" />
+                <TextBlock Text="Select" FontWeight="SemiBold" Margin="0 0 8 0" />
                 <ComboBox Grid.Column="1" Grid.ColumnSpan="2"
                           ItemsSource="{Binding Subhaulers}"
                           SelectedItem="{Binding SelectedSubhauler}"
                           DisplayMemberPath="Display" />
 
-                <TextBlock Grid.Row="1" Text="Contact" FontWeight="SemiBold" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSubhauler.ContactName}" />
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedSubhauler.Phone}" />
+                <TextBlock Grid.Row="1" Text="Name" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerName, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <TextBlock Grid.Row="2" Text="Contact" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerContactName, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <TextBlock Grid.Row="3" Text="Phone" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerPhone, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 8 0 0">
+                    <Button Content="Save" Command="{Binding SaveSubhaulerCommand}" Width="90" Margin="0 0 8 0" />
+                    <Button Content="Delete" Command="{Binding DeleteSubhaulerCommand}" Width="90" />
+                </StackPanel>
             </Grid>
         </GroupBox>
 
