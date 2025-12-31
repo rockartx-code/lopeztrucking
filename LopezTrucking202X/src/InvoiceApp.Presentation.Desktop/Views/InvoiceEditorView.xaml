@@ -152,6 +152,7 @@
 
             <GroupBox Grid.Row="1" Grid.Column="1" Header="Actions" Margin="0 0 0 12">
                 <StackPanel Margin="8">
+                    <Button Content="Save Invoice" Command="{Binding SaveInvoiceCommand}" Margin="0 0 0 8" />
                     <Button Content="Edit" Command="{Binding EditDetailGroupCommand}" Margin="0 0 0 8" />
                     <Button Content="Delete" Command="{Binding DeleteDetailGroupCommand}" />
                 </StackPanel>
