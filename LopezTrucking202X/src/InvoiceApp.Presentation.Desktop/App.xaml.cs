@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using InvoiceApp.Application.UseCases.Commands;
+using InvoiceApp.Application.UseCases.Queries;
 using InvoiceApp.Infrastructure;
 using InvoiceApp.Presentation.Desktop.ViewModels;
 using Microsoft.Extensions.Configuration;
