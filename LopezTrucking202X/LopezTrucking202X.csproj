@@ -47,6 +47,11 @@
     <Compile Remove="src\**\*.cs" />
     <EmbeddedResource Remove="src\**\*" />
     <None Remove="src\**\*" />
+    <ApplicationDefinition Remove="tools\**\*.xaml" />
+    <Page Remove="tools\**\*.xaml" />
+    <Compile Remove="tools\**\*.cs" />
+    <EmbeddedResource Remove="tools\**\*" />
+    <None Remove="tools\**\*" />
   </ItemGroup>
 
   <!--
