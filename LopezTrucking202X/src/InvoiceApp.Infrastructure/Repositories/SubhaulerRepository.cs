@@ -18,6 +18,7 @@ public sealed class SubhaulerRepository : ISubhaulerRepository
     {
         return await _dbContext.Subhaulers
             .OrderBy(subhauler => subhauler.Name)
+            .AsNoTracking()
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -42,5 +43,24 @@ public sealed class SubhaulerRepository : ISubhaulerRepository
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return _dbContext.SaveChangesAsync(cancellationToken);
+    public async Task UpdateLastInvoiceNoAsync(
+        Guid subhaulerId,
+        int lastInvoiceNo,
+        CancellationToken cancellationToken = default)
+    {
+        var subhauler = await _dbContext.Subhaulers
+            .FirstOrDefaultAsync(entity => entity.Id == subhaulerId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (subhauler is null)
+        {
+            return;
+        }
+
+        if (subhauler.LastInvoiceNo is null || lastInvoiceNo > subhauler.LastInvoiceNo)
+        {
+            subhauler.LastInvoiceNo = lastInvoiceNo;
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 }

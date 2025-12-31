@@ -9,4 +9,5 @@ public interface ISubhaulerRepository
     Task AddAsync(Subhauler subhauler, CancellationToken cancellationToken = default);
     void Remove(Subhauler subhauler);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task UpdateLastInvoiceNoAsync(Guid subhaulerId, int lastInvoiceNo, CancellationToken cancellationToken = default);
 }
