@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using InvoiceApp.Application.UseCases.Commands;
+using InvoiceApp.Application.UseCases.Queries;
 using InvoiceApp.Infrastructure;
 using InvoiceApp.Presentation.Desktop.ViewModels;
 using Microsoft.Extensions.Configuration;
@@ -49,6 +50,7 @@ public partial class App : Application
         services.AddSingleton(configuration);
         services.AddInfrastructure(configuration);
         services.AddTransient<AddDetailGroupHandler>();
+        services.AddTransient<SavePriceAgreementFromMixHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<InvoiceEditorViewModel>();
         services.AddSingleton<MainWindow>();

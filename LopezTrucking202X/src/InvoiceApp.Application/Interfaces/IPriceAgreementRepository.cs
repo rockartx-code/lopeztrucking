@@ -10,6 +10,13 @@ public interface IPriceAgreementRepository
         DateOnly asOfDate,
         CancellationToken cancellationToken = default);
 
+    Task<PriceAgreement?> FindByMixAndItemsAsync(
+        Guid companyId,
+        string fingerprintHash,
+        IReadOnlyCollection<ItemType> itemTypes,
+        DateOnly effectiveDate,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(PriceAgreement priceAgreement, CancellationToken cancellationToken = default);
     Task UpdateAsync(PriceAgreement priceAgreement, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -9,6 +10,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using InvoiceApp.Application.Interfaces;
+using InvoiceApp.Application.Models;
+using InvoiceApp.Application.UseCases;
+using InvoiceApp.Application.UseCases.Commands;
+using InvoiceApp.Application.UseCases.Queries;
 using InvoiceApp.Domain.Entities;
 
 namespace InvoiceApp.Presentation.Desktop.ViewModels;
@@ -17,7 +22,9 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 {
     private readonly ICompanyRepository _companyRepository;
     private readonly IPlaceRepository _placeRepository;
-    private readonly ISubhaulerRepository _subhaulerRepository;
+    private readonly ISettingRepository _settingRepository;
+    private readonly SavePriceAgreementFromMixHandler _savePriceAgreementFromMixHandler;
+    private readonly FindPriceAgreementByMixHandler _findPriceAgreementByMixHandler;
     private string _invoiceNo = string.Empty;
     private DateTime _invoiceDate = DateTime.Today;
     private string _checkNo = string.Empty;
@@ -32,16 +39,29 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     private bool _isEditing;
     private decimal _subtotal;
     private decimal _total;
+    private bool _saveMixAsAgreement;
+    private string _priceAgreementMessage = string.Empty;
+    private bool _hasPriceAgreementSuggestion;
+    private decimal? _suggestedBaseRate;
+    private CancellationTokenSource? _priceAgreementCts;
 
     public InvoiceEditorViewModel(
         ICompanyRepository companyRepository,
         IPlaceRepository placeRepository,
-        ISubhaulerRepository subhaulerRepository)
+        ISettingRepository settingRepository,
+        SavePriceAgreementFromMixHandler savePriceAgreementFromMixHandler,
+         FindPriceAgreementByMixHandler findPriceAgreementByMixHandler)
     {
         _companyRepository = companyRepository;
         _placeRepository = placeRepository;
-        _subhaulerRepository = subhaulerRepository;
-        Subhaulers = new ObservableCollection<SubhaulerInfo>();
+        _settingRepository = settingRepository;
+        _savePriceAgreementFromMixHandler = savePriceAgreementFromMixHandler;
+        _findPriceAgreementByMixHandler = findPriceAgreementByMixHandler;
+        Subhaulers = new ObservableCollection<SubhaulerInfo>
+        {
+            new() { Name = "Lopez Trucking", ContactName = "R. Lopez", Phone = "(555) 123-4567" },
+            new() { Name = "Hernandez Hauling", ContactName = "A. Hernandez", Phone = "(555) 987-6543" }
+        };
 
         Companies = new ObservableCollection<SelectableItem>();
         FromPlaces = new ObservableCollection<SelectableItem>();
@@ -54,11 +74,12 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         SubscribeToSelectionChanges(FromPlaces, UpdateEntryFromDisplay);
         SubscribeToSelectionChanges(ToPlaces, UpdateEntryToDisplay);
 
-        AddDetailGroupCommand = new RelayCommand(AddOrUpdateDetailGroup, CanAddOrUpdateDetailGroup);
+        AddDetailGroupCommand = new RelayCommand(() => _ = AddOrUpdateDetailGroupAsync(), CanAddOrUpdateDetailGroup);
         EditDetailGroupCommand = new RelayCommand(BeginEditDetailGroup, () => SelectedDetailGroup is not null);
         DeleteDetailGroupCommand = new RelayCommand(DeleteDetailGroup, () => SelectedDetailGroup is not null);
         CancelEditCommand = new RelayCommand(CancelEdit, () => IsEditing);
         SaveInvoiceCommand = new RelayCommand(() => _ = SaveInvoiceAsync(), CanSaveInvoice);
+        UsePriceAgreementCommand = new RelayCommand(ApplySuggestedAmountBase, () => _suggestedBaseRate.HasValue);
 
         UpdateEntryCompanyDisplay();
         UpdateEntryFromDisplay();
@@ -143,6 +164,22 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         set => SetField(ref _amountBase, value);
     }
 
+    public bool SaveMixAsAgreement
+    {
+        get => _saveMixAsAgreement;
+        set => SetField(ref _saveMixAsAgreement, value);
+    public string PriceAgreementMessage
+    {
+        get => _priceAgreementMessage;
+        private set => SetField(ref _priceAgreementMessage, value);
+    }
+
+    public bool HasPriceAgreementSuggestion
+    {
+        get => _hasPriceAgreementSuggestion;
+        private set => SetField(ref _hasPriceAgreementSuggestion, value);
+    }
+
     public ObservableCollection<DetailGroupViewModel> DetailGroups { get; }
 
     public DetailGroupViewModel? SelectedDetailGroup
@@ -205,6 +242,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     public ICommand CancelEditCommand { get; }
 
     public ICommand SaveInvoiceCommand { get; }
+    public ICommand UsePriceAgreementCommand { get; }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -222,7 +260,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         ReplaceSubhaulers(subhaulers);
     }
 
-    private void AddOrUpdateDetailGroup()
+    private async Task AddOrUpdateDetailGroupAsync()
     {
         if (IsEditing && SelectedDetailGroup is not null)
         {
@@ -254,6 +292,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
             DetailGroups.Add(detail);
         }
 
+        await TrySaveMixAgreementAsync().ConfigureAwait(true);
         ClearEntry();
         IsEditing = false;
         UpdateTotals();
@@ -338,6 +377,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         DetailDate = DateTime.Today;
         Empties = 0;
         AmountBase = 0m;
+        ClearPriceAgreementSuggestion();
         ClearSelections(Companies);
         ClearSelections(FromPlaces);
         ClearSelections(ToPlaces);
@@ -441,6 +481,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         EntryFromDisplay = string.Join(", ", FromPlaces.Where(item => item.IsSelected).Select(item => item.Name));
         OnPropertyChanged(nameof(EntryFromDisplay));
         RaiseCommandStates();
+        _ = RefreshPriceAgreementSuggestionAsync();
     }
 
     private void UpdateEntryToDisplay()
@@ -448,6 +489,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         EntryToDisplay = string.Join(", ", ToPlaces.Where(item => item.IsSelected).Select(item => item.Name));
         OnPropertyChanged(nameof(EntryToDisplay));
         RaiseCommandStates();
+        _ = RefreshPriceAgreementSuggestionAsync();
     }
 
     private async Task UpdatePlacesForCompaniesAsync(CancellationToken cancellationToken = default)
@@ -524,6 +566,107 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
                 LastInvoiceNo = subhauler.LastInvoiceNo
             });
         }
+        (UsePriceAgreementCommand as RelayCommand)?.RaiseCanExecuteChanged();
+    }
+
+    private async Task RefreshPriceAgreementSuggestionAsync()
+    {
+        var selectedCompanies = Companies
+            .Where(item => item.IsSelected)
+            .Select(item => item.Id)
+            .ToList();
+
+        if (selectedCompanies.Count != 1)
+        {
+            ClearPriceAgreementSuggestion();
+            return;
+        }
+
+        var mixIds = BuildMixIds(selectedCompanies[0]);
+        if (mixIds.Count == 0)
+        {
+            ClearPriceAgreementSuggestion();
+            return;
+        }
+
+        _priceAgreementCts?.Cancel();
+        _priceAgreementCts?.Dispose();
+        _priceAgreementCts = new CancellationTokenSource();
+        var token = _priceAgreementCts.Token;
+
+        try
+        {
+            var query = new FindPriceAgreementByMix(
+                selectedCompanies[0],
+                mixIds,
+                DateOnly.FromDateTime(DetailDate));
+
+            var agreement = await _findPriceAgreementByMixHandler
+                .HandleAsync(query, token)
+                .ConfigureAwait(true);
+
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (agreement is null)
+            {
+                ClearPriceAgreementSuggestion();
+                return;
+            }
+
+            var baseRate = agreement.Items.FirstOrDefault()?.BaseRate;
+            if (baseRate is null)
+            {
+                ClearPriceAgreementSuggestion();
+                return;
+            }
+
+            _suggestedBaseRate = baseRate.Value;
+            PriceAgreementMessage = "Monto pactado encontrado";
+            HasPriceAgreementSuggestion = true;
+            RaiseCommandStates();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private List<MixFingerprintId> BuildMixIds(Guid companyId)
+    {
+        var mixIds = new List<MixFingerprintId>
+        {
+            new(companyId, ItemType.Company)
+        };
+
+        mixIds.AddRange(FromPlaces
+            .Where(item => item.IsSelected)
+            .Select(item => new MixFingerprintId(item.Id, ItemType.From)));
+
+        mixIds.AddRange(ToPlaces
+            .Where(item => item.IsSelected)
+            .Select(item => new MixFingerprintId(item.Id, ItemType.To)));
+
+        return mixIds;
+    }
+
+    private void ApplySuggestedAmountBase()
+    {
+        if (!_suggestedBaseRate.HasValue)
+        {
+            return;
+        }
+
+        AmountBase = _suggestedBaseRate.Value;
+    }
+
+    private void ClearPriceAgreementSuggestion()
+    {
+        _suggestedBaseRate = null;
+        HasPriceAgreementSuggestion = false;
+        PriceAgreementMessage = string.Empty;
+        RaiseCommandStates();
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

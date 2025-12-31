@@ -30,6 +30,26 @@ public sealed class PriceAgreementRepository : IPriceAgreementRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public Task<PriceAgreement?> FindByMixAndItemsAsync(
+        Guid companyId,
+        string fingerprintHash,
+        IReadOnlyCollection<ItemType> itemTypes,
+        DateOnly effectiveDate,
+        CancellationToken cancellationToken = default)
+    {
+        var itemTypeList = itemTypes.Distinct().ToArray();
+
+        return _dbContext.PriceAgreements
+            .Include(agreement => agreement.Items)
+            .Where(agreement => agreement.CompanyId == companyId)
+            .Where(agreement => agreement.FingerprintHash == fingerprintHash)
+            .Where(agreement => agreement.EffectiveDate == effectiveDate)
+            .Where(agreement => agreement.IsActive)
+            .Where(agreement => agreement.Items.Count == itemTypeList.Length)
+            .Where(agreement => agreement.Items.All(item => itemTypeList.Contains(item.ItemType)))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public Task AddAsync(PriceAgreement priceAgreement, CancellationToken cancellationToken = default)
     {
         return _dbContext.PriceAgreements.AddAsync(priceAgreement, cancellationToken).AsTask();
