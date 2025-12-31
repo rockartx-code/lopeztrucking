@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using InvoiceApp.Application.UseCases.Commands;
+using InvoiceApp.Application.UseCases.Queries;
 using InvoiceApp.Infrastructure;
 using InvoiceApp.Presentation.Desktop.Views;
 using InvoiceApp.Presentation.Desktop.ViewModels;
@@ -50,12 +51,16 @@ public partial class App : Application
         services.AddSingleton(configuration);
         services.AddInfrastructure(configuration);
         services.AddTransient<AddDetailGroupHandler>();
+        services.AddTransient<CreateOrUpdateSubhaulerHandler>();
+        services.AddTransient<DeleteSubhaulerHandler>();
+        services.AddTransient<SavePriceAgreementFromMixHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<InvoiceEditorViewModel>();
         services.AddTransient<PlacesAdminViewModel>();
         services.AddTransient<CompanyPlacesAdminViewModel>();
         services.AddTransient<PlacesAdminView>();
         services.AddTransient<CompanyPlacesAdminView>();
+        services.AddSingleton<InvoiceBrowserViewModel>();
         services.AddSingleton<MainWindow>();
     }
 }

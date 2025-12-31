@@ -1,0 +1,67 @@
+<UserControl x:Class="InvoiceApp.Presentation.Desktop.Views.InvoiceBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Filters">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="From" FontWeight="SemiBold" />
+                <DatePicker Grid.Row="1"
+                            SelectedDate="{Binding StartDate, UpdateSourceTrigger=PropertyChanged}"
+                            Margin="0 4 12 0" />
+
+                <TextBlock Grid.Column="1" Text="To" FontWeight="SemiBold" />
+                <DatePicker Grid.Row="1"
+                            Grid.Column="1"
+                            SelectedDate="{Binding EndDate, UpdateSourceTrigger=PropertyChanged}"
+                            Margin="0 4 12 0" />
+
+                <TextBlock Grid.Column="2" Text="Subhauler" FontWeight="SemiBold" />
+                <ComboBox Grid.Row="1"
+                          Grid.Column="2"
+                          ItemsSource="{Binding SubhaulerFilters}"
+                          SelectedItem="{Binding SelectedSubhauler}"
+                          Margin="0 4 0 0" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="Invoices" Margin="0 12 0 0">
+            <DataGrid ItemsSource="{Binding InvoicesView}"
+                      SelectedItem="{Binding SelectedInvoice}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      Margin="8"
+                      MouseDoubleClick="OnInvoiceDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Invoice No" Binding="{Binding InvoiceNumber}" Width="*" />
+                    <DataGridTextColumn Header="Date" Binding="{Binding InvoiceDate, StringFormat=d}" Width="*" />
+                    <DataGridTextColumn Header="Subhauler" Binding="{Binding SubhaulerName}" Width="2*" />
+                    <DataGridTemplateColumn Header="Open" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Open" Click="OnOpenInvoiceClick" Padding="8 2" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </Grid>
+</UserControl>
