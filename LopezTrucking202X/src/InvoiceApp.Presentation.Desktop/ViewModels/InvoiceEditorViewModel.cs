@@ -401,6 +401,19 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         await RefreshSubhaulersAsync().ConfigureAwait(true);
     }
 
+    public void LoadFromBrowser(InvoiceBrowserItem invoice)
+    {
+        if (invoice is null)
+        {
+            return;
+        }
+
+        InvoiceNo = invoice.InvoiceNumber;
+        InvoiceDate = invoice.InvoiceDate;
+        SelectedSubhauler = Subhaulers.FirstOrDefault(subhauler =>
+            string.Equals(subhauler.Name, invoice.SubhaulerName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private async Task AddOrUpdateDetailGroupAsync()
     {
         if (IsEditing && SelectedDetailGroup is not null)
