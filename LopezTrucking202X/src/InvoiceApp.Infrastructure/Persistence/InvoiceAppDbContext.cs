@@ -58,6 +58,7 @@ public class InvoiceAppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.InvoiceNumber).IsRequired();
             entity.Property(e => e.InvoiceDate).HasConversion(dateOnlyConverter);
+            entity.HasIndex(e => e.InvoiceNumber).IsUnique();
             entity.HasOne(e => e.Company)
                 .WithMany()
                 .HasForeignKey(e => e.CompanyId)
@@ -111,6 +112,7 @@ public class InvoiceAppDbContext : DbContext
             entity.ToTable("Subhaulers");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.LastInvoiceNo);
         });
 
         modelBuilder.Entity<Setting>(entity =>

@@ -4,6 +4,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,24 +18,43 @@
         <GroupBox Header="Subhauler" Margin="0 0 0 12">
             <Grid Margin="8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="Name" FontWeight="SemiBold" />
+                <TextBlock Text="Select" FontWeight="SemiBold" Margin="0 0 8 0" />
                 <ComboBox Grid.Column="1" Grid.ColumnSpan="2"
                           ItemsSource="{Binding Subhaulers}"
                           SelectedItem="{Binding SelectedSubhauler}"
                           DisplayMemberPath="Display" />
 
-                <TextBlock Grid.Row="1" Text="Contact" FontWeight="SemiBold" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSubhauler.ContactName}" />
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedSubhauler.Phone}" />
+                <TextBlock Grid.Row="1" Text="Name" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerName, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <TextBlock Grid.Row="2" Text="Contact" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerContactName, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <TextBlock Grid.Row="3" Text="Phone" FontWeight="SemiBold" Margin="0 4 8 0" />
+                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                         Text="{Binding SubhaulerPhone, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 4 0 0" />
+
+                <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 8 0 0">
+                    <Button Content="Save" Command="{Binding SaveSubhaulerCommand}" Width="90" Margin="0 0 8 0" />
+                    <Button Content="Delete" Command="{Binding DeleteSubhaulerCommand}" Width="90" />
+                </StackPanel>
             </Grid>
         </GroupBox>
 
@@ -126,6 +148,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Dispatch" FontWeight="SemiBold" />
@@ -143,15 +166,28 @@
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="Amount Base" FontWeight="SemiBold" />
                     <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AmountBase, UpdateSourceTrigger=PropertyChanged}" Margin="0 4 0 0" />
 
-                    <StackPanel Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 12 0 0">
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Visibility="{Binding HasPriceAgreementSuggestion, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding PriceAgreementMessage}" VerticalAlignment="Center" Margin="0 0 8 0" />
+                        <Button Content="Use" Command="{Binding UsePriceAgreementCommand}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 12 0 0">
                         <Button Content="{Binding AddButtonText}" Command="{Binding AddDetailGroupCommand}" Margin="0 0 8 0" Width="90" />
                         <Button Content="Cancel" Command="{Binding CancelEditCommand}" Margin="0 0 8 0" Width="90" />
                     </StackPanel>
+
+                    <CheckBox Grid.Row="6"
+                              Grid.ColumnSpan="2"
+                              Content="Guardar mezcla como acuerdo"
+                              IsChecked="{Binding SaveMixAsAgreement}"
+                              Margin="0 12 0 0" />
                 </Grid>
             </GroupBox>
 
             <GroupBox Grid.Row="1" Grid.Column="1" Header="Actions" Margin="0 0 0 12">
                 <StackPanel Margin="8">
+                    <Button Content="Save Invoice" Command="{Binding SaveInvoiceCommand}" Margin="0 0 0 8" />
                     <Button Content="Edit" Command="{Binding EditDetailGroupCommand}" Margin="0 0 0 8" />
                     <Button Content="Delete" Command="{Binding DeleteDetailGroupCommand}" />
                 </StackPanel>
