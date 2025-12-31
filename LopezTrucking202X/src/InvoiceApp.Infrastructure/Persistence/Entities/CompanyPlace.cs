@@ -8,4 +8,5 @@ public class CompanyPlace
     public Company? Company { get; set; }
     public Guid PlaceId { get; set; }
     public Place? Place { get; set; }
+    public int SortOrder { get; set; }
 }

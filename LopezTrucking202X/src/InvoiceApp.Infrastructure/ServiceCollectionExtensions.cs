@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<ICompanyPlaceRepository, CompanyPlaceRepository>();
         services.AddScoped<IDetailGroupRepository, DetailGroupRepository>();
         services.AddScoped<IPriceAgreementRepository, PriceAgreementRepository>();
         services.AddScoped<IPlaceRepository, PlaceRepository>();
