@@ -50,7 +50,7 @@ public partial class App : Application
         services.AddSingleton(configuration);
         services.AddInfrastructure(configuration);
         services.AddTransient<AddDetailGroupHandler>();
-        services.AddTransient<FindPriceAgreementByMixHandler>();
+        services.AddTransient<SavePriceAgreementFromMixHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<InvoiceEditorViewModel>();
         services.AddSingleton<MainWindow>();

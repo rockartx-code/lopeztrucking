@@ -157,6 +157,12 @@
                         <Button Content="{Binding AddButtonText}" Command="{Binding AddDetailGroupCommand}" Margin="0 0 8 0" Width="90" />
                         <Button Content="Cancel" Command="{Binding CancelEditCommand}" Margin="0 0 8 0" Width="90" />
                     </StackPanel>
+
+                    <CheckBox Grid.Row="6"
+                              Grid.ColumnSpan="2"
+                              Content="Guardar mezcla como acuerdo"
+                              IsChecked="{Binding SaveMixAsAgreement}"
+                              Margin="0 12 0 0" />
                 </Grid>
             </GroupBox>
 
