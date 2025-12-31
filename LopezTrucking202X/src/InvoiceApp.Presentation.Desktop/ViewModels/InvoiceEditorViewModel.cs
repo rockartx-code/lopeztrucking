@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
+using InvoiceApp.Application.DTOs;
 using InvoiceApp.Application.Interfaces;
+using InvoiceApp.Presentation.Desktop.Views;
+using Microsoft.Win32;
 using InvoiceApp.Application.UseCases.Commands;
 using InvoiceApp.Application.Models;
 using InvoiceApp.Application.UseCases;
@@ -23,6 +28,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 {
     private readonly ICompanyRepository _companyRepository;
     private readonly IPlaceRepository _placeRepository;
+    private readonly IPdfGenerator _pdfGenerator;
     private readonly ISubhaulerRepository _subhaulerRepository;
     private readonly CreateOrUpdateSubhaulerHandler _createOrUpdateSubhaulerHandler;
     private readonly DeleteSubhaulerHandler _deleteSubhaulerHandler;
@@ -55,6 +61,11 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
     public InvoiceEditorViewModel(
         ICompanyRepository companyRepository,
         IPlaceRepository placeRepository,
+        IPdfGenerator pdfGenerator)
+    {
+        _companyRepository = companyRepository;
+        _placeRepository = placeRepository;
+        _pdfGenerator = pdfGenerator;
         ISubhaulerRepository subhaulerRepository,
         CreateOrUpdateSubhaulerHandler createOrUpdateSubhaulerHandler,
         DeleteSubhaulerHandler deleteSubhaulerHandler)
@@ -95,6 +106,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         EditDetailGroupCommand = new RelayCommand(BeginEditDetailGroup, () => SelectedDetailGroup is not null);
         DeleteDetailGroupCommand = new RelayCommand(DeleteDetailGroup, () => SelectedDetailGroup is not null);
         CancelEditCommand = new RelayCommand(CancelEdit, () => IsEditing);
+        PreviewInvoiceCommand = new RelayCommand(PreviewInvoice, () => DetailGroups.Any());
         SaveSubhaulerCommand = new RelayCommand(() => _ = SaveSubhaulerAsync(), CanSaveSubhauler);
         DeleteSubhaulerCommand = new RelayCommand(() => _ = DeleteSubhaulerAsync(), () => SelectedSubhauler is not null);
         SaveInvoiceCommand = new RelayCommand(() => _ = SaveInvoiceAsync(), CanSaveInvoice);
@@ -297,6 +309,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
 
     public ICommand CancelEditCommand { get; }
 
+    public ICommand PreviewInvoiceCommand { get; }
     public ICommand SaveSubhaulerCommand { get; }
 
     public ICommand DeleteSubhaulerCommand { get; }
@@ -556,6 +569,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         }
 
         UpdateTotals();
+        RaiseCommandStates();
     }
 
     private void OnDetailGroupPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -572,6 +586,32 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         Total = Subtotal - Advance;
     }
 
+    private void PreviewInvoice()
+    {
+        _ = PreviewInvoiceAsync();
+    }
+
+    private async Task PreviewInvoiceAsync()
+    {
+        var previewViewModel = BuildPreviewViewModel();
+        var dialog = new InvoicePreviewDialog
+        {
+            DataContext = previewViewModel,
+            Owner = Application.Current?.MainWindow
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var saveDialog = new SaveFileDialog
+        {
+            Filter = "PDF files (*.pdf)|*.pdf",
+            FileName = BuildDefaultFileName()
+        };
+
+        if (saveDialog.ShowDialog() != true)
     private bool CanSaveInvoice()
     {
         return SelectedSubhauler is not null
@@ -585,6 +625,74 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
             return;
         }
 
+        var invoiceDto = BuildInvoiceDto();
+        var pdfBytes = await _pdfGenerator.GenerateInvoiceAsync(invoiceDto).ConfigureAwait(true);
+        await File.WriteAllBytesAsync(saveDialog.FileName, pdfBytes).ConfigureAwait(true);
+    }
+
+    private InvoicePreviewViewModel BuildPreviewViewModel()
+    {
+        var detailGroups = DetailGroups.Select(group => new InvoicePreviewDetailGroup(
+            group.Dispatch,
+            group.Fb,
+            group.DetailDate,
+            group.Empties,
+            group.AmountBase,
+            group.Total,
+            group.Companies,
+            group.FromPlaces,
+            group.ToPlaces));
+
+        return new InvoicePreviewViewModel(
+            SelectedSubhauler?.Name ?? string.Empty,
+            SelectedSubhauler?.ContactName,
+            SelectedSubhauler?.Phone,
+            InvoiceNo,
+            InvoiceDate,
+            CheckNo,
+            Subtotal,
+            Advance,
+            Total,
+            detailGroups);
+    }
+
+    private InvoiceDto BuildInvoiceDto()
+    {
+        var detailGroups = DetailGroups.Select(group => new DetailGroupDto(
+            Guid.NewGuid(),
+            BuildDetailGroupDescription(group),
+            group.AmountBase,
+            group.Empties,
+            0m,
+            group.Total)).ToArray();
+
+        return new InvoiceDto(
+            Guid.NewGuid(),
+            InvoiceNo,
+            DateOnly.FromDateTime(InvoiceDate),
+            Companies.FirstOrDefault(item => item.IsSelected)?.Id ?? Guid.Empty,
+            detailGroups);
+    }
+
+    private static string BuildDetailGroupDescription(DetailGroupViewModel group)
+    {
+        var parts = new[]
+        {
+            group.Dispatch,
+            group.Fb,
+            group.DetailDate.ToString("MM/dd/yyyy"),
+            group.Companies,
+            $"From: {group.FromPlaces}",
+            $"To: {group.ToPlaces}"
+        };
+
+        return string.Join(" | ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private string BuildDefaultFileName()
+    {
+        var safeInvoiceNo = string.IsNullOrWhiteSpace(InvoiceNo) ? "invoice" : InvoiceNo.Trim();
+        return $"{safeInvoiceNo}-{InvoiceDate:yyyyMMdd}.pdf";
         var nextInvoiceNo = (SelectedSubhauler.LastInvoiceNo ?? 0) + 1;
         InvoiceNo = nextInvoiceNo.ToString(CultureInfo.InvariantCulture);
     }
@@ -703,6 +811,7 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         (EditDetailGroupCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (DeleteDetailGroupCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (CancelEditCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (PreviewInvoiceCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (SaveSubhaulerCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (DeleteSubhaulerCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (SaveInvoiceCommand as RelayCommand)?.RaiseCanExecuteChanged();

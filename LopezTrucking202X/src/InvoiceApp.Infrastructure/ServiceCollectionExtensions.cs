@@ -1,4 +1,5 @@
 using InvoiceApp.Application.Interfaces;
+using InvoiceApp.Infrastructure.Pdf;
 using InvoiceApp.Infrastructure.Persistence;
 using InvoiceApp.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlaceRepository, PlaceRepository>();
         services.AddScoped<ISubhaulerRepository, SubhaulerRepository>();
         services.AddScoped<ISettingRepository, SettingRepository>();
+        services.AddSingleton<IPdfGenerator, InvoicePdfGenerator>();
 
         return services;
     }
