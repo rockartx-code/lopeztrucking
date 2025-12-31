@@ -1,0 +1,114 @@
+<Window x:Class="InvoiceApp.Presentation.Desktop.Views.InvoicePreviewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Invoice Preview"
+        Height="700"
+        Width="1000"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Subhauler" Margin="0 0 0 12">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Name" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SubhaulerName}" />
+
+                <TextBlock Grid.Row="1" Text="Contact" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SubhaulerContact}" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SubhaulerPhone}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="Invoice Meta" Margin="0 0 0 12">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Invoice No" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Text="{Binding InvoiceNo}" />
+
+                <TextBlock Grid.Column="1" Text="Date" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InvoiceDate, StringFormat=MMM dd, yyyy}" />
+
+                <TextBlock Grid.Column="2" Text="Check No" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding CheckNo}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Header="Detail Groups" Margin="0 0 0 12">
+            <DataGrid ItemsSource="{Binding DetailGroups}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      Margin="8">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Dispatch" Binding="{Binding Dispatch}" Width="*" />
+                    <DataGridTextColumn Header="FB" Binding="{Binding Fb}" Width="*" />
+                    <DataGridTextColumn Header="Date" Binding="{Binding DetailDate, StringFormat=MM/dd/yyyy}" Width="*" />
+                    <DataGridTextColumn Header="Company" Binding="{Binding Companies}" Width="2*" />
+                    <DataGridTextColumn Header="From" Binding="{Binding FromPlaces}" Width="2*" />
+                    <DataGridTextColumn Header="To" Binding="{Binding ToPlaces}" Width="2*" />
+                    <DataGridTextColumn Header="Empties" Binding="{Binding Empties}" Width="*" />
+                    <DataGridTextColumn Header="Amount Base" Binding="{Binding AmountBase, StringFormat=C}" Width="*" />
+                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Totals" Margin="0 0 12 0">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Subtotal" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1" Text="{Binding Subtotal, StringFormat=C}" />
+
+                    <TextBlock Grid.Column="1" Text="Advance" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Advance, StringFormat=C}" />
+
+                    <TextBlock Grid.Column="2" Text="Total" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Total, StringFormat=C}" />
+                </Grid>
+            </GroupBox>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <Button Content="Cancel" Width="120" Margin="0 0 12 0" Click="OnCancelClicked" />
+                <Button Content="Generate PDF" Width="140" IsDefault="True" Click="OnAcceptClicked" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

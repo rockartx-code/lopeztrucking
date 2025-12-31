@@ -185,6 +185,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Text="Subtotal" FontWeight="SemiBold" />
@@ -195,6 +196,14 @@
 
                 <TextBlock Grid.Column="2" Text="Total" FontWeight="SemiBold" />
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Total, StringFormat=C}" />
+
+                <Button Grid.Row="2"
+                        Grid.ColumnSpan="3"
+                        Content="Preview PDF"
+                        Command="{Binding PreviewInvoiceCommand}"
+                        HorizontalAlignment="Right"
+                        Width="140"
+                        Margin="0 12 0 0" />
             </Grid>
         </GroupBox>
     </Grid>
