@@ -203,6 +203,19 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         await UpdatePlacesForCompaniesAsync(cancellationToken).ConfigureAwait(true);
     }
 
+    public void LoadFromBrowser(InvoiceBrowserItem invoice)
+    {
+        if (invoice is null)
+        {
+            return;
+        }
+
+        InvoiceNo = invoice.InvoiceNumber;
+        InvoiceDate = invoice.InvoiceDate;
+        SelectedSubhauler = Subhaulers.FirstOrDefault(subhauler =>
+            string.Equals(subhauler.Name, invoice.SubhaulerName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void AddOrUpdateDetailGroup()
     {
         if (IsEditing && SelectedDetailGroup is not null)
