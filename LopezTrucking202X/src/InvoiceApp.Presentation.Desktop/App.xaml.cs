@@ -49,6 +49,8 @@ public partial class App : Application
         services.AddSingleton(configuration);
         services.AddInfrastructure(configuration);
         services.AddTransient<AddDetailGroupHandler>();
+        services.AddTransient<CreateOrUpdateSubhaulerHandler>();
+        services.AddTransient<DeleteSubhaulerHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<InvoiceEditorViewModel>();
         services.AddSingleton<MainWindow>();
