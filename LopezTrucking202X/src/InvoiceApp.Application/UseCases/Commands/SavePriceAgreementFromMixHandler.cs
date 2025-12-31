@@ -22,30 +22,57 @@ public sealed class SavePriceAgreementFromMixHandler
         CancellationToken cancellationToken = default)
     {
         var fingerprint = _fingerprintService.CreateMixFingerprint(command.MixIds, command.UseLegacyFormat);
-        var items = command.MixIds
+        var itemTypes = command.MixIds
             .Select(id => id.ItemType)
             .Distinct()
             .OrderBy(type => type)
-            .Select(type => new PriceAgreementItem
-            {
-                ItemType = type,
-                EmptyUnitPrice = command.EmptyUnitPrice,
-                BaseRate = command.BaseRate
-            })
             .ToList();
 
-        var agreement = new PriceAgreement
-        {
-            CompanyId = command.CompanyId,
-            MixName = command.MixName,
-            FingerprintText = fingerprint.FingerprintText,
-            FingerprintHash = fingerprint.FingerprintHash.Value,
-            EffectiveDate = command.EffectiveDate,
-            IsActive = true,
-            Items = items
-        };
+        var agreement = await _priceAgreementRepository.FindByMixAndItemsAsync(
+            command.CompanyId,
+            fingerprint.FingerprintHash.Value,
+            itemTypes,
+            command.EffectiveDate,
+            cancellationToken);
 
-        await _priceAgreementRepository.AddAsync(agreement, cancellationToken);
+        if (agreement is null)
+        {
+            agreement = new PriceAgreement
+            {
+                CompanyId = command.CompanyId,
+                MixName = command.MixName,
+                FingerprintText = fingerprint.FingerprintText,
+                FingerprintHash = fingerprint.FingerprintHash.Value,
+                EffectiveDate = command.EffectiveDate,
+                IsActive = true,
+                Items = itemTypes
+                    .Select(type => new PriceAgreementItem
+                    {
+                        ItemType = type,
+                        EmptyUnitPrice = command.EmptyUnitPrice,
+                        BaseRate = command.BaseRate
+                    })
+                    .ToList()
+            };
+
+            await _priceAgreementRepository.AddAsync(agreement, cancellationToken);
+        }
+        else
+        {
+            agreement.MixName = command.MixName;
+            agreement.FingerprintText = fingerprint.FingerprintText;
+            agreement.FingerprintHash = fingerprint.FingerprintHash.Value;
+            agreement.IsActive = true;
+
+            foreach (var item in agreement.Items)
+            {
+                item.EmptyUnitPrice = command.EmptyUnitPrice;
+                item.BaseRate = command.BaseRate;
+            }
+
+            await _priceAgreementRepository.UpdateAsync(agreement, cancellationToken);
+        }
+
         await _priceAgreementRepository.SaveChangesAsync(cancellationToken);
 
         return MapToDto(agreement);
