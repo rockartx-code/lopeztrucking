@@ -3,6 +3,7 @@ using System.Windows;
 using InvoiceApp.Application.UseCases.Commands;
 using InvoiceApp.Application.UseCases.Queries;
 using InvoiceApp.Infrastructure;
+using InvoiceApp.Presentation.Desktop.Views;
 using InvoiceApp.Presentation.Desktop.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,10 @@ public partial class App : Application
         services.AddTransient<SavePriceAgreementFromMixHandler>();
         services.AddSingleton<AddDetailGroupViewModel>();
         services.AddSingleton<InvoiceEditorViewModel>();
+        services.AddTransient<PlacesAdminViewModel>();
+        services.AddTransient<CompanyPlacesAdminViewModel>();
+        services.AddTransient<PlacesAdminView>();
+        services.AddTransient<CompanyPlacesAdminView>();
         services.AddSingleton<InvoiceBrowserViewModel>();
         services.AddSingleton<MainWindow>();
     }

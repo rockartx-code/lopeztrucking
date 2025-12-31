@@ -240,6 +240,10 @@ public partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
             b.Property<Guid>("PlaceId")
                 .HasColumnType("TEXT");
 
+            b.Property<int>("SortOrder")
+                .HasColumnType("INTEGER")
+                .HasDefaultValue(0);
+
             b.HasKey("CompanyId", "PlaceId");
 
             b.HasIndex("PlaceId");

@@ -190,6 +190,9 @@
                     <Button Content="Save Invoice" Command="{Binding SaveInvoiceCommand}" Margin="0 0 0 8" />
                     <Button Content="Edit" Command="{Binding EditDetailGroupCommand}" Margin="0 0 0 8" />
                     <Button Content="Delete" Command="{Binding DeleteDetailGroupCommand}" />
+                    <Separator Margin="0 12 0 12" />
+                    <Button Content="Manage Places" Click="OnManagePlacesClick" Margin="0 0 0 8" />
+                    <Button Content="Manage Company Places" Click="OnManageCompanyPlacesClick" />
                 </StackPanel>
             </GroupBox>
 

@@ -15,6 +15,14 @@ public sealed class PlaceRepository : IPlaceRepository
         _dbContext = dbContext;
     }
 
+    public async Task<IReadOnlyList<Place>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Places
+            .OrderBy(place => place.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<IReadOnlyList<Place>> GetByCompanyIdsAsync(
         IReadOnlyCollection<Guid> companyIds,
         CancellationToken cancellationToken = default)
@@ -26,15 +34,21 @@ public sealed class PlaceRepository : IPlaceRepository
 
         var places = await _dbContext.CompanyPlaces
             .Where(link => companyIds.Contains(link.CompanyId))
-            .Select(link => link.Place)
-            .Where(place => place != null)
+            .Select(link => new { link.Place, link.SortOrder })
+            .Where(item => item.Place != null)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         return places
-            .GroupBy(place => place!.Id)
-            .Select(group => group.First()!)
-            .OrderBy(place => place.Name)
+            .GroupBy(item => item.Place!.Id)
+            .Select(group => new
+            {
+                Place = group.First().Place!,
+                SortOrder = group.Min(item => item.SortOrder)
+            })
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Place.Name)
+            .Select(item => item.Place)
             .ToList();
     }
 
@@ -42,6 +56,32 @@ public sealed class PlaceRepository : IPlaceRepository
     {
         return _dbContext.Places
             .FirstOrDefaultAsync(place => place.Id == placeId, cancellationToken);
+    }
+
+    public Task AddAsync(Place place, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Places.Add(place);
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateAsync(Place place, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Places.Update(place);
+        return Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Guid placeId, CancellationToken cancellationToken = default)
+    {
+        var place = await _dbContext.Places
+            .FirstOrDefaultAsync(item => item.Id == placeId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (place is null)
+        {
+            return;
+        }
+
+        _dbContext.Places.Remove(place);
     }
 
     public async Task UpdateFlagsAsync(

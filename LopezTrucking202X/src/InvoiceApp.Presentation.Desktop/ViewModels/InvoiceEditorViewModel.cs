@@ -399,6 +399,10 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
         await RefreshSubhaulersAsync(savedSubhauler.Id).ConfigureAwait(true);
     }
 
+    public Task RefreshPlacesAsync(CancellationToken cancellationToken = default)
+        => UpdatePlacesForCompaniesAsync(cancellationToken);
+
+    private void AddOrUpdateDetailGroup()
     private async Task DeleteSubhaulerAsync()
     {
         if (SelectedSubhauler is null)
@@ -765,8 +769,16 @@ public sealed class InvoiceEditorViewModel : INotifyPropertyChanged
             .GetByCompanyIdsAsync(selectedCompanyIds, cancellationToken)
             .ConfigureAwait(true);
 
-        ReplaceSelectableItems(FromPlaces, places.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
-        ReplaceSelectableItems(ToPlaces, places.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
+        var placeList = places.ToList();
+        var fromPlaces = placeList.Any(place => place.IsFrom)
+            ? placeList.Where(place => place.IsFrom)
+            : placeList;
+        var toPlaces = placeList.Any(place => place.IsTo)
+            ? placeList.Where(place => place.IsTo)
+            : placeList;
+
+        ReplaceSelectableItems(FromPlaces, fromPlaces.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
+        ReplaceSelectableItems(ToPlaces, toPlaces.Select(place => (place.Id, place.Name)), autoSelectSingle: true);
         UpdateEntryFromDisplay();
         UpdateEntryToDisplay();
     }
@@ -1088,24 +1100,4 @@ public sealed class DetailGroupViewModel : INotifyPropertyChanged
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
-}
-
-public sealed class RelayCommand : ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool> _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute ?? (() => true);
-    }
-
-    public event EventHandler? CanExecuteChanged;
-
-    public bool CanExecute(object? parameter) => _canExecute();
-
-    public void Execute(object? parameter) => _execute();
-
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }

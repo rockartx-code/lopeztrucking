@@ -169,6 +169,7 @@ public class InvoiceAppDbContext : DbContext
         {
             entity.ToTable("CompanyPlaces");
             entity.HasKey(e => new { e.CompanyId, e.PlaceId });
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
             entity.HasOne(e => e.Company)
                 .WithMany()
                 .HasForeignKey(e => e.CompanyId)
