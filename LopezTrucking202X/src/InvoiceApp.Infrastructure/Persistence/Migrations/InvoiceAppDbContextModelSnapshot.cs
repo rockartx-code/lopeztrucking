@@ -84,6 +84,9 @@ public partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
 
             b.HasIndex("CompanyId");
 
+            b.HasIndex("InvoiceNumber")
+                .IsUnique();
+
             b.ToTable("Invoices");
         });
 
@@ -213,6 +216,9 @@ public partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
 
             b.Property<string>("ContactName")
                 .HasColumnType("TEXT");
+
+            b.Property<int?>("LastInvoiceNo")
+                .HasColumnType("INTEGER");
 
             b.Property<string>("Name")
                 .IsRequired()

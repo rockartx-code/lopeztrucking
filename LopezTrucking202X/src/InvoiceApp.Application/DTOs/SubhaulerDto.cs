@@ -4,4 +4,5 @@ public sealed record SubhaulerDto(
     Guid Id,
     string Name,
     string? ContactName,
-    string? Phone);
+    string? Phone,
+    int? LastInvoiceNo);
